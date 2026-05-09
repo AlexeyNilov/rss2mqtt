@@ -84,17 +84,17 @@ Initial config shape:
 
 Target package: `internal/feed`.
 
-* [ ] Choose the RSS parsing approach before coding:
+* [x] Choose the RSS parsing approach before coding:
   * Prefer a small, maintained Go RSS/Atom parser if it avoids fragile XML handling.
   * If adding a dependency, record the decision in `doc/decisions.md`.
-* [ ] Define a normalized `Item` type with at least feed name, title, content, link, published time if available, and a stable raw identity candidate if available.
-* [ ] Write failing tests using `sample/feed.xml`, not live network calls.
-* [ ] Write failing tests for extracting `description` as the item content.
-* [ ] Write failing tests for parse failures returning useful errors.
-* [ ] Implement parsing from an `io.Reader` first.
-* [ ] Implement HTTP fetching separately using an injectable `http.Client`.
-* [ ] Set conservative HTTP timeouts.
-* [ ] Run `go test ./internal/feed`.
+* [x] Define a normalized `Item` type with at least feed name, title, content, link, published time if available, and a stable raw identity candidate if available.
+* [x] Write failing tests using `sample/feed.xml`, not live network calls.
+* [x] Write failing tests for extracting `description` as the item content.
+* [x] Write failing tests for parse failures returning useful errors.
+* [x] Implement parsing from an `io.Reader` first.
+* [x] Implement HTTP fetching separately using an injectable `http.Client`.
+* [x] Set conservative HTTP timeouts.
+* [x] Run `go test ./internal/feed`.
 
 ## Phase 4: Filtering Package
 

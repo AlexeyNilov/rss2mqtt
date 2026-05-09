@@ -33,6 +33,18 @@ Use a lightweight Architecture Decision Record (ADR) style:
 
 ## Actual decisions
 
+### 2026-05-09: Use gofeed for RSS and Atom parsing
+
+**Status:** Accepted
+
+**Context:** The application needs to parse RSS feeds reliably, including common extensions such as WordPress `content:encoded`, Dublin Core metadata, GUIDs, links, publication dates, and Atom feeds. The sample feed already includes namespaces and extension fields that make custom XML parsing a poor default.
+
+**Decision:** Use `github.com/mmcdole/gofeed` for RSS and Atom parsing, and normalize only the fields needed by this application.
+
+**Alternatives considered:** Parsing RSS directly with `encoding/xml` would avoid an external dependency, but it would push feed-format edge cases into this codebase. Supporting only the exact sample feed shape would be too brittle for a tool intended to subscribe to several feeds.
+
+**Consequences:** The feed package remains focused on normalization and error handling rather than XML details. The project accepts one parser dependency, which should be kept behind `internal/feed` so it can be replaced later if needed.
+
 ### 2026-05-09: Use yaml.v3 for configuration parsing
 
 **Status:** Accepted
