@@ -33,6 +33,114 @@ Use a lightweight Architecture Decision Record (ADR) style:
 
 ## Actual decisions
 
+### 2026-05-09: Use GitHub module path
+
+**Status:** Accepted
+
+**Context:** The Go project needs a stable module path before code and internal imports are created.
+
+**Decision:** Use `github.com/AlexeyNilov/rss2mqtt` as the Go module path.
+
+**Alternatives considered:** A local-only module name would work during early development, but it would create unnecessary churn once the repository is pushed or imported from GitHub.
+
+**Consequences:** The module can be initialized directly with the final public import path. Package imports should use this path consistently once code is added.
+
+### 2026-05-09: Suppress duplicate items across scheduled runs
+
+**Status:** Accepted
+
+**Context:** The MVP will be run periodically by a systemd timer. Without persisted state, each hourly run could print or later publish the same feed items repeatedly.
+
+**Decision:** The application will suppress duplicate items across separate invocations by storing local state per configured feed name. The exact state format is not decided yet, but a likely approach is to store an identifier or hash for recently processed items per feed.
+
+**Alternatives considered:** Relying only on RSS publication timestamps would be fragile because feeds may omit timestamps, edit old items, or publish items out of order. Doing no duplicate suppression would keep the MVP simpler, but it would make hourly scheduled use noisy and less useful.
+
+**Consequences:** The application will need a small local persistence boundary even before MQTT support is added. The unresolved design questions are where the state file lives, how much history is kept, and how item identity is computed.
+
+### 2026-05-09: Use `rss.yaml` as the local config file
+
+**Status:** Accepted
+
+**Context:** The MVP needs a simple, predictable configuration path for local runs and systemd timer execution.
+
+**Decision:** The application will read RSS feed configuration from a local working-directory file named `rss.yaml`.
+
+**Alternatives considered:** A command-line config path would be more flexible, and a system path such as `/etc/rss2mqtt/rss.yaml` would fit packaged Linux deployment better. For the first version, a local file is simpler and avoids introducing install-layout decisions too early.
+
+**Consequences:** Local testing is straightforward. Systemd units will need to set the working directory explicitly or run the binary from the directory containing `rss.yaml`.
+
+### 2026-05-09: Run the MVP once per invocation
+
+**Status:** Accepted
+
+**Context:** The first version does not need to own scheduling. The intended deployment model is to install the application behind a systemd timer that runs every hour during daytime.
+
+**Decision:** The MVP will process the configured feeds once and then exit.
+
+**Alternatives considered:** A long-running daemon with internal polling would centralize scheduling inside the application, but it adds lifecycle, retry, sleep, and observability concerns before the core feed filtering behavior is proven.
+
+**Consequences:** The application stays simpler and easier to supervise with standard Linux tools. The trade-off is that cross-run concerns, especially duplicate suppression, need a deliberate design if repeated hourly runs would otherwise reprint or republish old feed items.
+
+### 2026-05-09: Use simple any-substring, case-insensitive filtering
+
+**Status:** Accepted
+
+**Context:** Each RSS feed has a configured list of substrings that decide whether an item should be relayed. The matching rule needs to be simple enough for the MVP while still useful for broad topic filtering.
+
+**Decision:** An item is approved when its title or configured content field contains any configured filter substring, using case-insensitive matching.
+
+**Alternatives considered:** All-filter matching would be stricter but easier to misconfigure and could silently miss relevant items. Whole-word matching would reduce false positives, but substring matching is simpler and acceptable for the first version. Case-sensitive matching would be more exact, but it is a poor default for human-written RSS text and filter lists.
+
+**Consequences:** The MVP favors recall over precision. Users may receive some false positives when a substring appears inside an unrelated word, but the behavior is simple to understand and test.
+
+### 2026-05-09: Print human-readable output in the MVP
+
+**Status:** Accepted
+
+**Context:** The stdout stage exists to verify feed loading and filtering before MQTT support is added. The user should be able to inspect results directly in a terminal or timer logs.
+
+**Decision:** Approved RSS items will be printed as human-readable text during the MVP.
+
+**Alternatives considered:** JSON lines would be easier for downstream automation and snapshot tests, but it is less convenient for manual inspection. Since MQTT will become the production output later, stdout is optimized for early human verification.
+
+**Consequences:** Manual testing is straightforward. If automated consumers later depend on stdout, a structured output mode may need to be added explicitly instead of relying on the human-readable format.
+
+### 2026-05-09: Build the service in Go
+
+**Status:** Accepted
+
+**Context:** The application needs to run on Raspberry Pi Zero 2 class hardware with low operational overhead. The project should be easy to deploy as a small standalone process.
+
+**Decision:** Implement the application in Go.
+
+**Alternatives considered:** A scripting language such as Python could make early prototyping faster, but it adds an interpreter dependency and usually a larger runtime footprint. A shell-based implementation would be smaller initially, but it would become brittle once RSS parsing, filtering, MQTT publishing, configuration validation, and duplicate handling are added.
+
+**Consequences:** Go supports a single compiled binary and a small runtime footprint, which fits the target device. The trade-off is that early iteration may be slightly more verbose than a script, but the production deployment path is cleaner.
+
+### 2026-05-09: Start with stdout before MQTT
+
+**Status:** Accepted
+
+**Context:** The target behavior is to relay approved RSS items to MQTT, but the filtering and feed-processing behavior can be validated independently from MQTT connectivity.
+
+**Decision:** The first version will print approved RSS items to stdout instead of publishing them to MQTT.
+
+**Alternatives considered:** Implementing MQTT immediately would test the final transport earlier, but it would mix feed parsing, filtering, configuration, network output, and broker configuration before the core behavior is proven.
+
+**Consequences:** The MVP can validate feed loading and filtering with fewer moving parts. MQTT integration remains a future step and should be added behind a clear output boundary so stdout can continue to be useful for testing.
+
+### 2026-05-09: Configure feeds and filters with YAML
+
+**Status:** Accepted
+
+**Context:** The user needs to subscribe to several RSS feeds and assign substring filters to each feed. The configuration should be editable on a small Linux device without recompiling the application.
+
+**Decision:** Store the list of RSS feeds and their corresponding filter substrings in a YAML configuration file.
+
+**Alternatives considered:** Command-line flags would be awkward for multiple feeds and filters. JSON would work, but it is less convenient for hand-edited configuration. Environment variables are suitable for secrets and deployment-specific values, but not for structured feed lists.
+
+**Consequences:** YAML is practical for hand-written configuration and supports structured feed definitions. The project should keep the schema simple and validate it at startup so configuration mistakes fail clearly.
+
 ### 2026-05-03: Target Raspberry Pi Zero 2 WH with Raspberry Pi OS Lite 64-bit
 
 **Status:** Accepted
