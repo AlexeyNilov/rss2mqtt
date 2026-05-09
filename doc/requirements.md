@@ -29,7 +29,6 @@ This helps ensure requirements are:
 * Each configured RSS feed entry shall include a unique RSS name.
 * Each configured RSS feed entry shall include the feed URL.
 * Each configured RSS feed entry shall include a list of substrings used for filtering.
-* Each configured RSS feed entry shall include an RSS content field mapping.
 * If the configuration file cannot be read, the system shall report the error and stop.
 * If the configuration file is invalid, the system shall report the validation error and stop.
 
@@ -41,7 +40,6 @@ Initial YAML shape:
   filters:
     - important substring
     - another match
-  content_field: description
 ```
 
 ### RSS input
@@ -54,7 +52,7 @@ Initial YAML shape:
 ### Filtering
 
 * When an RSS item is received from a configured feed, the system shall evaluate the item against that feed's configured filter substrings.
-* When an RSS item's title or configured content field contains at least one configured filter substring, the system shall approve the item for relay.
+* When an RSS item's title or RSS `description` contains at least one configured filter substring, the system shall approve the item for relay.
 * When an RSS item does not match the configured filter rules, the system shall not relay the item.
 * When evaluating filter substrings, the system shall match substrings case-insensitively.
 
@@ -78,5 +76,4 @@ Initial YAML shape:
 
 These requirements need clarification before implementation:
 
-* Define the exact content fields to use from parsed RSS items.
 * Define the duplicate suppression state format, location, and retention policy.

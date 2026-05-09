@@ -40,4 +40,3 @@ This captures:
 ## Open questions
 
 * How should duplicate suppression state be stored and expired across scheduled runs?
-* Which concrete RSS parser fields should be supported by the configurable content field mapping?

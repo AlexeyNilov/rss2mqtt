@@ -81,13 +81,13 @@ Use a lightweight Architecture Decision Record (ADR) style:
 
 **Consequences:** The application stays simpler and easier to supervise with standard Linux tools. The trade-off is that cross-run concerns, especially duplicate suppression, need a deliberate design if repeated hourly runs would otherwise reprint or republish old feed items.
 
-### 2026-05-09: Use simple any-substring, case-insensitive filtering
+### 2026-05-09: Use simple any-substring, case-insensitive filtering over title and description
 
 **Status:** Accepted
 
 **Context:** Each RSS feed has a configured list of substrings that decide whether an item should be relayed. The matching rule needs to be simple enough for the MVP while still useful for broad topic filtering.
 
-**Decision:** An item is approved when its title or configured content field contains any configured filter substring, using case-insensitive matching.
+**Decision:** An item is approved when its title or RSS `description` contains any configured filter substring, using case-insensitive matching.
 
 **Alternatives considered:** All-filter matching would be stricter but easier to misconfigure and could silently miss relevant items. Whole-word matching would reduce false positives, but substring matching is simpler and acceptable for the first version. Case-sensitive matching would be more exact, but it is a poor default for human-written RSS text and filter lists.
 
