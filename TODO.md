@@ -151,22 +151,22 @@ Target package: `internal/output`.
 
 Target location: either `cmd/rss2mqtt/main.go` only, or add `internal/app` if orchestration becomes too large.
 
-* [ ] Write tests for orchestration if the logic cannot stay as thin wiring in `main.go`.
-* [ ] Load `rss.yaml`.
-* [ ] Load duplicate state.
-* [ ] For each configured feed, fetch and parse items.
-* [ ] For each item, filter first, then check duplicate state.
-* [ ] Print approved, non-duplicate items.
-* [ ] Mark processed approved items in state.
-* [ ] Save state at the end.
-* [ ] Continue processing other feeds when one feed fetch or parse fails.
-* [ ] Return a non-zero exit code only for startup/config failures or other fatal application errors.
-* [ ] Run `go test ./...`.
+* [x] Write tests for orchestration if the logic cannot stay as thin wiring in `main.go`.
+* [x] Load `rss.yaml`.
+* [x] Load duplicate state.
+* [x] For each configured feed, fetch and parse items.
+* [x] For each item, filter first, then check duplicate state.
+* [x] Print approved, non-duplicate items.
+* [x] Mark processed approved items in state.
+* [x] Save state at the end.
+* [x] Continue processing other feeds when one feed fetch or parse fails.
+* [x] Return a non-zero exit code only for startup/config failures or other fatal application errors.
+* [x] Run `go test ./...`.
 
 Important behavior to settle:
 
-* [ ] Decide whether filtered-out items should be recorded in duplicate state. Initial recommendation: no, because changing filters later should allow older matching items to appear.
-* [ ] Decide whether duplicate state is updated before or after successful stdout write. Initial recommendation: after successful write.
+* [x] Decide whether filtered-out items should be recorded in duplicate state. Decision: no, because changing filters later should allow older matching items to appear.
+* [x] Decide whether duplicate state is updated before or after successful stdout write. Decision: after successful write.
 
 ## Phase 8: CLI and Runtime Polish
 

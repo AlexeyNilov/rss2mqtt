@@ -33,6 +33,18 @@ Use a lightweight Architecture Decision Record (ADR) style:
 
 ## Actual decisions
 
+### 2026-05-09: Mark duplicates only after successful relay
+
+**Status:** Accepted
+
+**Context:** The run loop filters RSS items, suppresses duplicates, relays approved items, and persists state. The ordering matters because incorrect state updates can either hide relevant items or cause repeated output.
+
+**Decision:** Filter items before checking duplicate state. Do not record filtered-out items. For approved non-duplicate items, write the item to the current output first, then mark it as processed in duplicate state.
+
+**Alternatives considered:** Recording all fetched items would prevent old items from appearing after filters change, which is surprising during tuning. Marking an item before output would avoid reprinting it if the process crashes after output starts, but it risks losing an item when output fails before the user sees it.
+
+**Consequences:** Filter changes can surface older items that now match, which is useful during configuration changes. If output succeeds and the later state save fails, the item may appear again on the next run; that is preferable to silently dropping an item that was never relayed.
+
 ### 2026-05-09: Store duplicate suppression state in local JSON
 
 **Status:** Accepted
