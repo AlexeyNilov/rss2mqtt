@@ -100,12 +100,12 @@ Target package: `internal/feed`.
 
 Target package: `internal/filter`.
 
-* [ ] Write failing tests showing that matching any configured substring approves an item.
-* [ ] Write failing tests showing matching is case-insensitive.
-* [ ] Write failing tests showing title and description are both searched.
-* [ ] Write failing tests showing non-matching items are rejected.
-* [ ] Implement the matcher as pure logic with no I/O.
-* [ ] Run `go test ./internal/filter`.
+* [x] Write failing tests showing that matching any configured substring approves an item.
+* [x] Write failing tests showing matching is case-insensitive.
+* [x] Write failing tests showing title and description are both searched.
+* [x] Write failing tests showing non-matching items are rejected.
+* [x] Implement the matcher as pure logic with no I/O.
+* [x] Run `go test ./internal/filter`.
 
 ## Phase 5: Duplicate Suppression State
 

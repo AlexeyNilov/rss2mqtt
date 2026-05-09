@@ -62,10 +62,23 @@ func validateFeed(feed Feed, index int, seen map[string]struct{}) error {
 	if len(feed.Filters) == 0 {
 		return fmt.Errorf("feed %q: filters must not be empty", feed.Name)
 	}
+	if hasBlankFilter(feed.Filters) {
+		return fmt.Errorf("feed %q: filters must not contain blank values", feed.Name)
+	}
 	if _, ok := seen[feed.Name]; ok {
 		return fmt.Errorf("duplicate feed name %q", feed.Name)
 	}
 
 	seen[feed.Name] = struct{}{}
 	return nil
+}
+
+func hasBlankFilter(filters []string) bool {
+	for _, filter := range filters {
+		if strings.TrimSpace(filter) == "" {
+			return true
+		}
+	}
+
+	return false
 }

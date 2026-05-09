@@ -75,6 +75,16 @@ func TestLoadRejectsInvalidFeedConfig(t *testing.T) {
 			wantErr: "filters",
 		},
 		{
+			name: "blank filter",
+			content: `
+- name: oreilly-radar
+  url: https://www.oreilly.com/radar/feed/
+  filters:
+    - " "
+`,
+			wantErr: "filter",
+		},
+		{
 			name: "duplicate feed name",
 			content: `
 - name: oreilly-radar
