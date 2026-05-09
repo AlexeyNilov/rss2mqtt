@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log"
 
 	"github.com/AlexeyNilov/rss2mqtt/internal/config"
 	"github.com/AlexeyNilov/rss2mqtt/internal/feed"
@@ -144,5 +145,5 @@ func processItems(configuredFeed config.Feed, items []feed.Item, duplicates Dupl
 }
 
 func writeDiagnostic(stderr io.Writer, feedName string, err error) {
-	_, _ = fmt.Fprintf(stderr, "Feed %q failed: %v\n", feedName, err)
+	log.New(stderr, "", 0).Printf("Feed %q failed: %v", feedName, err)
 }

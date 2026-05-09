@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"os"
 
 	"github.com/AlexeyNilov/rss2mqtt/internal/app"
@@ -13,7 +13,7 @@ func main() {
 		Stdout: os.Stdout,
 		Stderr: os.Stderr,
 	}); err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "rss2mqtt: %v\n", err)
+		log.New(os.Stderr, "", 0).Printf("rss2mqtt: %v", err)
 		os.Exit(1)
 	}
 }

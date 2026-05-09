@@ -100,6 +100,9 @@ func TestRunContinuesWhenOneFeedFails(t *testing.T) {
 	if !strings.Contains(stdout.String(), "Title: Go release") {
 		t.Fatalf("stdout = %q, want working feed item", stdout.String())
 	}
+	if strings.Contains(stdout.String(), "broken") {
+		t.Fatalf("stdout = %q, want diagnostics excluded from stdout", stdout.String())
+	}
 	if !strings.Contains(stderr.String(), "broken") {
 		t.Fatalf("stderr = %q, want broken feed diagnostic", stderr.String())
 	}

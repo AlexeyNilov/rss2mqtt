@@ -170,10 +170,10 @@ Important behavior to settle:
 
 ## Phase 8: CLI and Runtime Polish
 
-* [ ] Keep the initial CLI minimal: no flags unless a real need appears.
-* [ ] Use logging for errors and operational messages; use stdout only for approved item output.
-* [ ] Send errors and diagnostics to stderr.
-* [ ] Confirm the app exits after one full pass.
+* [x] Keep the initial CLI minimal: no flags unless a real need appears.
+* [x] Use logging for errors and operational messages; use stdout only for approved item output.
+* [x] Send errors and diagnostics to stderr.
+* [x] Confirm the app exits after one full pass.
 
 ## Phase 9: Verification
 
