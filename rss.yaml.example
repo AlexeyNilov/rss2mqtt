@@ -1,0 +1,5 @@
+- name: oreilly-radar
+  url: https://www.oreilly.com/radar/feed/
+  filters:
+    - AI
+    - agent

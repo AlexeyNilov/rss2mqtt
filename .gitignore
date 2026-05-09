@@ -28,6 +28,12 @@ go.work.sum
 # env file
 .env
 
+# Local runtime files
+rss.yaml
+.rss2mqtt-state.*
+/rss2mqtt
+/rss2mqtt.exe
+
 # cache and mod files
 .gocache/
 .gomodcache/

@@ -51,12 +51,12 @@ Keep `main.go` thin. Business logic belongs in `internal/*` packages so it can b
 
 ## Phase 1: Project Skeleton
 
-* [ ] Initialize the Go module with `github.com/AlexeyNilov/rss2mqtt`.
-* [ ] Create the minimal directory layout under `cmd/rss2mqtt` and `internal`.
-* [ ] Add `.gitignore` entries for local config, local state, binaries, and test artifacts.
-* [ ] Add `rss.yaml.example` showing the initial config shape.
-* [ ] Update `README.md` with the MVP purpose, run-once behavior, config file name, and local development commands.
-* [ ] Run `go test ./...` to verify the empty skeleton is valid.
+* [x] Initialize the Go module with `github.com/AlexeyNilov/rss2mqtt`.
+* [x] Create the minimal directory layout under `cmd/rss2mqtt` and `internal`.
+* [x] Add `.gitignore` entries for local config, local state, binaries, and test artifacts.
+* [x] Add `rss.yaml.example` showing the initial config shape.
+* [x] Update `README.md` with the MVP purpose, run-once behavior, config file name, and local development commands.
+* [x] Run `go test ./...` to verify the empty skeleton is valid.
 
 ## Phase 2: Configuration Package
 
