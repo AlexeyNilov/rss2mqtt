@@ -141,11 +141,11 @@ corrupt state -> error
 
 Target package: `internal/output`.
 
-* [ ] Write failing tests for formatting one approved item.
-* [ ] Write failing tests for including enough context to debug matches: feed name, title, link if available, and content excerpt if useful.
-* [ ] Keep the formatter independent from stdout; accept an `io.Writer`.
-* [ ] Implement human-readable output.
-* [ ] Run `go test ./internal/output`.
+* [x] Write failing tests for formatting one approved item.
+* [x] Write failing tests for including enough context to debug matches: feed name, title, link if available, and content excerpt if useful.
+* [x] Keep the formatter independent from stdout; accept an `io.Writer`.
+* [x] Implement human-readable output.
+* [x] Run `go test ./internal/output`.
 
 ## Phase 7: Application Orchestration
 
@@ -174,8 +174,6 @@ Important behavior to settle:
 * [ ] Use logging for errors and operational messages; use stdout only for approved item output.
 * [ ] Send errors and diagnostics to stderr.
 * [ ] Confirm the app exits after one full pass.
-* [ ] Add a short sample systemd timer/service note to `README.md` only after the binary behavior is stable.
-* [ ] Cross-compile or at least validate build settings for `linux/arm64`.
 
 ## Phase 9: Verification
 
