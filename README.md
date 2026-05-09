@@ -37,3 +37,28 @@ Build the local binary:
 ```powershell
 go build ./cmd/rss2mqtt
 ```
+
+## Raspberry Pi Service Timer
+
+After copying the `linux/arm64` binary and creating `rss.yaml` on the Raspberry Pi, install the systemd service and timer:
+
+```bash
+scripts/setup_service_pi.sh raspberrypi.local pi /home/pi/rss2mqtt rss2mqtt
+```
+
+The installer creates a run-once `rss2mqtt.service` and enables `rss2mqtt.timer`. By default, the timer runs hourly from 08:00 through 20:00 local device time:
+
+```bash
+TIMER_ON_CALENDAR='*-*-* 08..20:00:00' scripts/setup_service_pi.sh raspberrypi.local
+```
+
+Use `--print-only` to inspect the generated units without installing them.
+
+To deploy a new binary after the timer is installed:
+
+```bash
+scripts/build_arm.sh
+scripts/deploy_pi.sh raspberrypi.local pi /home/pi/rss2mqtt/rss2mqtt rss2mqtt
+```
+
+The deploy script copies the binary, sets executable mode, and restarts the timer if it is already installed. It does not stop or start the run-once service directly.

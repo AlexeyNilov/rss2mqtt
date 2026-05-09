@@ -7,11 +7,14 @@ LOCAL_FILE="${LOCAL_FILE:-$ROOT_DIR/bin/rss2mqtt-linux-arm64}"
 PI_HOST="${1:-${PI_HOST:-zero-control.local}}"
 PI_USER="${2:-${PI_USER:-pi}}"
 PI_PATH="${3:-${PI_PATH:-/home/pi/rss2mqtt/rss2mqtt}}"
-SERVICE_NAME="${4:-${SERVICE_NAME:-rss2mqtt.service}}"
+SERVICE_NAME="${4:-${SERVICE_NAME:-rss2mqtt}}"
+SERVICE_NAME="${SERVICE_NAME%.service}"
+SERVICE_NAME="${SERVICE_NAME%.timer}"
+TIMER_NAME="${SERVICE_NAME}.timer"
 
 if [[ -z "$PI_HOST" ]]; then
   printf 'Usage: %s <pi-host> [pi-user] [remote-path] [service-name]\n' "$(basename "$0")" >&2
-  printf 'Example: %s raspberrypi.local pi /home/pi/rss2mqtt/rss2mqtt rss2mqtt.service\n' "$(basename "$0")" >&2
+  printf 'Example: %s raspberrypi.local pi /home/pi/rss2mqtt/rss2mqtt rss2mqtt\n' "$(basename "$0")" >&2
   exit 1
 fi
 
@@ -23,19 +26,20 @@ fi
 
 REMOTE_TARGET="${PI_USER}@${PI_HOST}"
 REMOTE_PATH_ARG="$(printf '%q' "$PI_PATH")"
-SERVICE_NAME_ARG="$(printf '%q' "$SERVICE_NAME")"
-
-start_remote_service() {
-  ssh "$REMOTE_TARGET" "sudo systemctl start -- $SERVICE_NAME_ARG"
-}
-
-ssh "$REMOTE_TARGET" "sudo systemctl stop -- $SERVICE_NAME_ARG"
-trap start_remote_service EXIT
+TIMER_NAME_ARG="$(printf '%q' "$TIMER_NAME")"
 
 scp "$LOCAL_FILE" "${REMOTE_TARGET}:${PI_PATH}"
-ssh "$REMOTE_TARGET" "chmod 755 -- $REMOTE_PATH_ARG"
+ssh "$REMOTE_TARGET" "
+  set -euo pipefail
+  chmod 755 -- $REMOTE_PATH_ARG
+  if systemctl cat -- $TIMER_NAME_ARG >/dev/null 2>&1; then
+    sudo systemctl daemon-reload
+    sudo systemctl restart -- $TIMER_NAME_ARG
+    sudo systemctl list-timers --no-pager $TIMER_NAME_ARG
+  else
+    printf 'Timer unit not installed yet: %s\n' '$TIMER_NAME' >&2
+    printf 'Run scripts/setup_service_pi.sh to install the systemd timer.\n' >&2
+  fi
+"
 
-trap - EXIT
-start_remote_service
-
-printf 'Restarted %s after copying %s to %s:%s and setting mode 755\n' "$SERVICE_NAME" "$LOCAL_FILE" "$REMOTE_TARGET" "$PI_PATH"
+printf 'Copied %s to %s:%s and set mode 755\n' "$LOCAL_FILE" "$REMOTE_TARGET" "$PI_PATH"

@@ -189,5 +189,4 @@ Important behavior to settle:
 ## Deferred Work
 
 * [ ] MQTT output package and configuration.
-* [ ] systemd service and timer files.
 * [ ] More advanced duplicate retention policy if the simple local state grows too large.
