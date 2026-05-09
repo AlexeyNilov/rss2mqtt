@@ -12,6 +12,10 @@ type stdoutRelayer struct {
 	writer io.Writer
 }
 
+func NewStdoutRelayer(writer io.Writer) Relayer {
+	return stdoutRelayer{writer: writer}
+}
+
 func (r stdoutRelayer) Publish(ctx context.Context, item feed.Item) error {
 	if err := ctx.Err(); err != nil {
 		return err

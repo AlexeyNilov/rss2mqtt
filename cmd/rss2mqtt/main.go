@@ -2,6 +2,9 @@ package main
 
 import (
 	"context"
+	"flag"
+	"fmt"
+	"io"
 	"log"
 	"os"
 
@@ -9,19 +12,66 @@ import (
 	"github.com/AlexeyNilov/rss2mqtt/internal/mqttout"
 )
 
-func main() {
-	mqttConfig, err := mqttout.LoadConfig(mqttout.DefaultEnvPath)
-	if err != nil {
-		log.New(os.Stderr, "", 0).Printf("rss2mqtt: load mqtt config: %v", err)
-		os.Exit(1)
-	}
+const (
+	outputMQTT   = "mqtt"
+	outputStdout = "stdout"
+)
 
-	if err := app.Run(context.Background(), app.Options{
-		Stdout:  os.Stdout,
-		Stderr:  os.Stderr,
-		Relayer: mqttout.NewPublisher(mqttConfig),
-	}); err != nil {
+type cliOptions struct {
+	output string
+}
+
+func main() {
+	if err := run(context.Background(), os.Args[1:], os.Stdout, os.Stderr); err != nil {
 		log.New(os.Stderr, "", 0).Printf("rss2mqtt: %v", err)
 		os.Exit(1)
 	}
+}
+
+func run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
+	cliOpts, err := parseCLIOptions(args)
+	if err != nil {
+		return err
+	}
+
+	relayer, err := buildRelayer(cliOpts, stdout)
+	if err != nil {
+		return err
+	}
+
+	return app.Run(ctx, app.Options{
+		Stdout:  stdout,
+		Stderr:  stderr,
+		Relayer: relayer,
+	})
+}
+
+func parseCLIOptions(args []string) (cliOptions, error) {
+	flags := flag.NewFlagSet("rss2mqtt", flag.ContinueOnError)
+	flags.SetOutput(io.Discard)
+
+	opts := cliOptions{}
+	flags.StringVar(&opts.output, "output", outputMQTT, "output target: mqtt or stdout")
+
+	if err := flags.Parse(args); err != nil {
+		return cliOptions{}, err
+	}
+	if opts.output != outputMQTT && opts.output != outputStdout {
+		return cliOptions{}, fmt.Errorf("invalid output %q: use %q or %q", opts.output, outputMQTT, outputStdout)
+	}
+
+	return opts, nil
+}
+
+func buildRelayer(opts cliOptions, stdout io.Writer) (app.Relayer, error) {
+	if opts.output == outputStdout {
+		return app.NewStdoutRelayer(stdout), nil
+	}
+
+	mqttConfig, err := mqttout.LoadConfig(mqttout.DefaultEnvPath)
+	if err != nil {
+		return nil, fmt.Errorf("load mqtt config: %w", err)
+	}
+
+	return mqttout.NewPublisher(mqttConfig), nil
 }

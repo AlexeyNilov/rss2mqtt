@@ -33,6 +33,18 @@ Use a lightweight Architecture Decision Record (ADR) style:
 
 ## Actual decisions
 
+### 2026-05-09: Keep MQTT as default output with stdout as CLI option
+
+**Status:** Accepted
+
+**Context:** MQTT is the production relay path, but stdout remains useful for local inspection, troubleshooting, and validating filtering without requiring a broker.
+
+**Decision:** Add `--output` with supported values `mqtt` and `stdout`. Default to `mqtt`. Only MQTT output requires `.env`.
+
+**Alternatives considered:** Keeping MQTT as the only runtime output would simplify the CLI but make local inspection harder. Reverting stdout to the default would conflict with the production relay requirement.
+
+**Consequences:** The command remains minimal while supporting broker-free local runs. Tests can also exercise orchestration through stdout without a real MQTT broker.
+
 ### 2026-05-09: Use MQTT output configured by local .env
 
 **Status:** Accepted

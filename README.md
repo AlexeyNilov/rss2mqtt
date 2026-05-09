@@ -48,6 +48,20 @@ Build the local binary:
 go build ./cmd/rss2mqtt
 ```
 
+Run with default MQTT output:
+
+```powershell
+go run ./cmd/rss2mqtt
+```
+
+Run with stdout output for local inspection:
+
+```powershell
+go run ./cmd/rss2mqtt --output stdout
+```
+
+Supported output values are `mqtt` and `stdout`. MQTT is the default and requires `.env`; stdout does not require `.env`.
+
 ## Raspberry Pi Service Timer
 
 After copying the `linux/arm64` binary and creating `rss.yaml` on the Raspberry Pi, install the systemd service and timer:

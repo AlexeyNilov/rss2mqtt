@@ -97,7 +97,7 @@ func withDefaults(opts Options) Options {
 		opts.Source = HTTPFeedSource{Client: feed.DefaultHTTPClient()}
 	}
 	if opts.Relayer == nil {
-		opts.Relayer = stdoutRelayer{writer: opts.Stdout}
+		opts.Relayer = NewStdoutRelayer(opts.Stdout)
 	}
 
 	return opts
