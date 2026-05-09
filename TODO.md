@@ -177,14 +177,14 @@ Important behavior to settle:
 
 ## Phase 9: Verification
 
-* [ ] Run `go test ./...`.
-* [ ] Run the app against a local fixture or controlled test feed.
-* [ ] Verify invalid config exits clearly.
-* [ ] Verify one broken feed does not stop other feeds.
-* [ ] Verify duplicate suppression across two invocations.
-* [ ] Verify human-readable stdout contains approved items only.
-* [ ] Verify diagnostics do not pollute stdout.
-* [ ] Build the binary for the target platform.
+* [x] Run `go test ./...`.
+* [x] Run the app against a local fixture or controlled test feed.
+* [x] Verify invalid config exits clearly.
+* [x] Verify one broken feed does not stop other feeds.
+* [x] Verify duplicate suppression across two invocations.
+* [x] Verify human-readable stdout contains approved items only.
+* [x] Verify diagnostics do not pollute stdout.
+* [x] Build the binary for the target platform.
 
 ## Deferred Work
 
