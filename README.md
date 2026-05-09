@@ -1,16 +1,23 @@
 # rss2mqtt
 
-RSS to MQTT relay.
+`rss2mqtt` reads RSS feeds, filters feed items by configured substrings, suppresses duplicates across scheduled runs, and relays approved items to MQTT.
 
-## MVP
+The app is designed for Raspberry Pi Zero 2 class hardware. It runs once and exits, so scheduling is handled outside the process, typically by a systemd timer.
 
-The first version is a small Go command-line application that reads RSS feed definitions from a local `rss.yaml` file, filters feed items by case-insensitive substrings, publishes approved items to MQTT, and exits.
+## Features
 
-The application is intended to run on Raspberry Pi Zero 2 class hardware. Scheduling is external: the MVP runs once per invocation and can later be launched by a systemd timer.
+* Multiple RSS feeds configured in `rss.yaml`.
+* Per-feed substring filters.
+* Case-insensitive matching against item title and RSS `description`.
+* Duplicate suppression with local `.rss2mqtt-state.json` state.
+* MQTT output by default.
+* Optional stdout output for local inspection.
+* MQTT QoS 1 publishing.
+* systemd service/timer installation script for Raspberry Pi.
 
 ## Configuration
 
-Create a local `rss.yaml` file next to the binary or run the binary from a working directory that contains it:
+Run the binary from a directory containing `rss.yaml`.
 
 ```yaml
 - name: oreilly-radar
@@ -22,9 +29,7 @@ Create a local `rss.yaml` file next to the binary or run the binary from a worki
 
 `name` must be unique per feed. Filters are matched against the RSS item title and `description`.
 
-See `rss.yaml.example` for a sample file.
-
-Create a local `.env` file for MQTT settings:
+For MQTT output, create `.env` in the same working directory:
 
 ```env
 MQTT_BROKER_URL=tcp://localhost:1883
@@ -34,55 +39,76 @@ MQTT_CLIENT_ID=rss2mqtt
 
 `MQTT_BROKER_URL` and `MQTT_TOPIC` are required. `MQTT_CLIENT_ID` is optional and defaults to `rss2mqtt`.
 
+## Running
+
+MQTT is the default output:
+
+```bash
+rss2mqtt
+```
+
+Use stdout output for local inspection without requiring `.env`:
+
+```bash
+rss2mqtt --output stdout
+```
+
+Supported output values are `mqtt` and `stdout`.
+
 ## Development
 
-Run the test suite:
+Run tests:
 
-```powershell
+```
 go test ./...
 ```
 
-Build the local binary:
+Build locally:
 
-```powershell
+```
 go build ./cmd/rss2mqtt
 ```
 
-Run with default MQTT output:
+Build for Raspberry Pi Zero 2:
 
-```powershell
-go run ./cmd/rss2mqtt
+```bash
+scripts/build_arm.sh
 ```
 
-Run with stdout output for local inspection:
+## Raspberry Pi Deployment
 
-```powershell
-go run ./cmd/rss2mqtt --output stdout
+Copy a new binary to the Pi:
+
+```bash
+scripts/deploy_pi.sh raspberrypi.local pi /home/pi/rss2mqtt/rss2mqtt rss2mqtt
 ```
 
-Supported output values are `mqtt` and `stdout`. MQTT is the default and requires `.env`; stdout does not require `.env`.
-
-## Raspberry Pi Service Timer
-
-After copying the `linux/arm64` binary and creating `rss.yaml` on the Raspberry Pi, install the systemd service and timer:
+Install the systemd service and timer:
 
 ```bash
 scripts/setup_service_pi.sh raspberrypi.local pi /home/pi/rss2mqtt rss2mqtt
 ```
 
-The installer creates a run-once `rss2mqtt.service` and enables `rss2mqtt.timer`. By default, the timer runs hourly from 08:00 through 20:00 local device time:
+The installer creates a run-once `rss2mqtt.service` and enables `rss2mqtt.timer`. By default, the timer runs hourly from 08:00 through 20:00 local device time.
+
+Override the timer schedule:
 
 ```bash
 TIMER_ON_CALENDAR='*-*-* 08..20:00:00' scripts/setup_service_pi.sh raspberrypi.local
 ```
 
-Use `--print-only` to inspect the generated units without installing them.
-
-To deploy a new binary after the timer is installed:
+Inspect generated systemd units without installing them:
 
 ```bash
-scripts/build_arm.sh
-scripts/deploy_pi.sh raspberrypi.local pi /home/pi/rss2mqtt/rss2mqtt rss2mqtt
+scripts/setup_service_pi.sh --print-only raspberrypi.local
 ```
 
 The deploy script copies the binary, sets executable mode, and restarts the timer if it is already installed. It does not stop or start the run-once service directly.
+
+## Local Files
+
+These files are intentionally local and ignored by git:
+
+* `.env`
+* `rss.yaml`
+* `.rss2mqtt-state.json`
