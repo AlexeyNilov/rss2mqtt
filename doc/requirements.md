@@ -74,6 +74,4 @@ Initial YAML shape:
 
 ## Open requirements
 
-These requirements need clarification before implementation:
-
-* Define the duplicate suppression state format, location, and retention policy.
+None at this time.

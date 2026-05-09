@@ -39,4 +39,4 @@ This captures:
 
 ## Open questions
 
-* How should duplicate suppression state be stored and expired across scheduled runs?
+None at this time.

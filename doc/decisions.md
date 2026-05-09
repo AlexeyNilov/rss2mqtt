@@ -33,6 +33,18 @@ Use a lightweight Architecture Decision Record (ADR) style:
 
 ## Actual decisions
 
+### 2026-05-09: Store duplicate suppression state in local JSON
+
+**Status:** Accepted
+
+**Context:** The application runs once per systemd timer invocation. It needs persisted local state to avoid printing or publishing the same RSS item during later hourly runs. The state should be small, easy to inspect, and avoid pulling in another storage dependency.
+
+**Decision:** Store duplicate suppression state in `.rss2mqtt-state.json` in the working directory. The file maps each configured feed name to a bounded list of SHA-256 hashes of item identities. Keep up to 256 item hashes per feed. Treat a missing state file as empty state, and treat a corrupt state file as an error.
+
+**Alternatives considered:** Storing only the latest item per feed would be smaller, but it would fail when feeds publish multiple relevant items between hourly runs or reorder items. SQLite would be robust, but it is unnecessary for a small bounded state file. Storing raw item URLs or GUIDs would be easier to inspect, but hashing avoids leaking full item identifiers into local state.
+
+**Consequences:** Duplicate suppression is deterministic and lightweight. The trade-off is that the 256-item retention limit is a heuristic; very high-volume feeds could still reprocess older items after they fall out of the retained set.
+
 ### 2026-05-09: Use gofeed for RSS and Atom parsing
 
 **Status:** Accepted

@@ -11,7 +11,7 @@ Step-by-step implementation plan for the MVP.
 * RSS item filtering searches the item title and RSS `description`.
 * Filters are case-insensitive substrings; matching any configured substring approves the item.
 * Stdout output is human-readable and intended for manual inspection or systemd logs, not as a stable machine API.
-* Duplicate suppression is required across hourly runs, but the final state file format, state file location, item identity algorithm, and retention policy are still open.
+* Duplicate suppression state is stored in `.rss2mqtt-state.json` as bounded per-feed item identity hashes.
 * `sample/feed.xml` is the canonical local RSS fixture for early parser and filtering tests.
 
 ## Sample Feed Reference
@@ -111,30 +111,31 @@ Target package: `internal/filter`.
 
 Target package: `internal/state`.
 
-* [ ] Decide the local state design before implementation:
+* [x] Decide the local state design before implementation:
   * state file path
   * state file format
   * item identity algorithm
   * number of remembered items per feed or retention window
   * behavior when state file is missing or corrupt
-* [ ] Record the accepted state design in `doc/decisions.md`.
-* [ ] Write failing tests for allowing a new item.
-* [ ] Write failing tests for suppressing an item seen in an earlier run.
-* [ ] Write failing tests for keeping state separated by feed name.
-* [ ] Write failing tests for loading missing state as empty state.
-* [ ] Write failing tests for saving state atomically enough for a small local file.
-* [ ] Implement the state store behind a small interface.
-* [ ] Run `go test ./internal/state`.
+* [x] Record the accepted state design in `doc/decisions.md`.
+* [x] Write failing tests for allowing a new item.
+* [x] Write failing tests for suppressing an item seen in an earlier run.
+* [x] Write failing tests for keeping state separated by feed name.
+* [x] Write failing tests for loading missing state as empty state.
+* [x] Write failing tests for saving state atomically enough for a small local file.
+* [x] Implement the state store with a small public API. Defer an explicit Go interface until the orchestration package has a consumer that needs it.
+* [x] Run `go test ./internal/state`.
 
-Suggested starting point to evaluate later:
+Accepted state design:
 
 ```text
-.rss2mqtt-state.yaml or .rss2mqtt-state.json
-feed name -> bounded list of item hashes
-hash input -> feed name + item link/guid/title/content fallback
+.rss2mqtt-state.json
+feed name -> bounded list of item identity hashes
+hash input -> normalized item identity from the feed package
+retention -> latest 256 item hashes per feed
+missing state -> empty state
+corrupt state -> error
 ```
-
-Do not implement this blindly. It needs a separate decision because bad duplicate identity logic can either spam duplicates or suppress legitimate updates.
 
 ## Phase 6: Human-Readable Output
 
