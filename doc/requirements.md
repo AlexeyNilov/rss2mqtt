@@ -64,13 +64,12 @@ Initial YAML shape:
 
 ### MVP output
 
-* While MQTT support is not yet implemented, when an RSS item is approved for relay, the system shall print the approved item to stdout as human-readable text.
-* When an RSS item is not approved for relay, the system shall not print that item to stdout.
-
-### Future MQTT output
-
-* When MQTT support is implemented, the system shall publish approved RSS items to a configured MQTT topic.
-* When MQTT support is implemented, MQTT connection settings shall be configurable.
+* When an RSS item is approved for relay, the system shall publish the approved item to the configured MQTT topic.
+* When publishing an approved RSS item to MQTT, the system shall use MQTT QoS 1.
+* When an RSS item is not approved for relay, the system shall not publish that item.
+* When MQTT output is configured, the system shall read MQTT settings from `.env` in the local working directory.
+* The `.env` file shall include `MQTT_BROKER_URL`.
+* The `.env` file shall include `MQTT_TOPIC`.
 
 ## Open requirements
 

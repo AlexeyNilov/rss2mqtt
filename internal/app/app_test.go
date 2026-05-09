@@ -32,12 +32,13 @@ func TestRunPrintsApprovedNonDuplicateItemsAndSavesState(t *testing.T) {
 	state := newFakeState()
 	state.seen["oreilly-radar:item-3"] = true
 	var stdout bytes.Buffer
+	relayer := newFakeRelayer(&stdout)
 
 	err := Run(context.Background(), Options{
 		ConfigPath: configPath,
 		State:      state,
 		Source:     source,
-		Stdout:     &stdout,
+		Relayer:    relayer,
 		Stderr:     &bytes.Buffer{},
 	})
 	if err != nil {
@@ -86,12 +87,13 @@ func TestRunContinuesWhenOneFeedFails(t *testing.T) {
 	}
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
+	relayer := newFakeRelayer(&stdout)
 
 	err := Run(context.Background(), Options{
 		ConfigPath: configPath,
 		State:      newFakeState(),
 		Source:     source,
-		Stdout:     &stdout,
+		Relayer:    relayer,
 		Stderr:     &stderr,
 	})
 	if err != nil {
@@ -170,12 +172,13 @@ func TestRunDoesNotMarkItemWhenOutputFails(t *testing.T) {
 		},
 	}
 	state := newFakeState()
+	relayer := &fakeRelayer{err: errors.New("publish failed")}
 
 	err := Run(context.Background(), Options{
 		ConfigPath: configPath,
 		State:      state,
 		Source:     source,
-		Stdout:     failingWriter{err: errors.New("stdout failed")},
+		Relayer:    relayer,
 		Stderr:     &bytes.Buffer{},
 	})
 	if err == nil {
@@ -200,12 +203,13 @@ func TestRunReturnsErrorWhenStateSaveFails(t *testing.T) {
 	}
 	state := newFakeState()
 	state.saveErr = errors.New("disk full")
+	var stdout bytes.Buffer
 
 	err := Run(context.Background(), Options{
 		ConfigPath: configPath,
 		State:      state,
 		Source:     source,
-		Stdout:     &bytes.Buffer{},
+		Relayer:    newFakeRelayer(&stdout),
 		Stderr:     &bytes.Buffer{},
 	})
 	if err == nil {
@@ -255,12 +259,21 @@ func (s *fakeState) Save() error {
 	return s.saveErr
 }
 
-type failingWriter struct {
-	err error
+type fakeRelayer struct {
+	writer *bytes.Buffer
+	err    error
 }
 
-func (w failingWriter) Write([]byte) (int, error) {
-	return 0, w.err
+func newFakeRelayer(writer *bytes.Buffer) *fakeRelayer {
+	return &fakeRelayer{writer: writer}
+}
+
+func (r *fakeRelayer) Publish(_ context.Context, item feed.Item) error {
+	if r.err != nil {
+		return r.err
+	}
+	r.writer.WriteString("Title: " + item.Title + "\n")
+	return nil
 }
 
 func stateKey(feedName, identity string) string {

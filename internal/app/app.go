@@ -10,7 +10,6 @@ import (
 	"github.com/AlexeyNilov/rss2mqtt/internal/config"
 	"github.com/AlexeyNilov/rss2mqtt/internal/feed"
 	"github.com/AlexeyNilov/rss2mqtt/internal/filter"
-	"github.com/AlexeyNilov/rss2mqtt/internal/output"
 	"github.com/AlexeyNilov/rss2mqtt/internal/state"
 )
 
@@ -23,6 +22,7 @@ type Options struct {
 	Stderr     io.Writer
 	Source     FeedSource
 	State      DuplicateState
+	Relayer    Relayer
 }
 
 type FeedSource interface {
@@ -33,6 +33,10 @@ type DuplicateState interface {
 	Seen(feedName, identity string) bool
 	Mark(feedName, identity string)
 	Save() error
+}
+
+type Relayer interface {
+	Publish(ctx context.Context, item feed.Item) error
 }
 
 type HTTPFeedSource struct {
@@ -52,7 +56,7 @@ func Run(ctx context.Context, opts Options) error {
 		return fmt.Errorf("load state: %w", err)
 	}
 
-	if err := processFeeds(ctx, cfg, opts.Source, duplicateState, opts.Stdout, opts.Stderr); err != nil {
+	if err := processFeeds(ctx, cfg, opts.Source, duplicateState, opts.Relayer, opts.Stderr); err != nil {
 		return err
 	}
 	if err := duplicateState.Save(); err != nil {
@@ -92,6 +96,9 @@ func withDefaults(opts Options) Options {
 	if opts.Source == nil {
 		opts.Source = HTTPFeedSource{Client: feed.DefaultHTTPClient()}
 	}
+	if opts.Relayer == nil {
+		opts.Relayer = stdoutRelayer{writer: opts.Stdout}
+	}
 
 	return opts
 }
@@ -109,7 +116,7 @@ func processFeeds(
 	cfg config.Config,
 	source FeedSource,
 	duplicates DuplicateState,
-	stdout io.Writer,
+	relayer Relayer,
 	stderr io.Writer,
 ) error {
 	for _, configuredFeed := range cfg.Feeds {
@@ -118,7 +125,7 @@ func processFeeds(
 			writeDiagnostic(stderr, configuredFeed.Name, err)
 			continue
 		}
-		if err := processItems(configuredFeed, items, duplicates, stdout); err != nil {
+		if err := processItems(ctx, configuredFeed, items, duplicates, relayer); err != nil {
 			return err
 		}
 	}
@@ -126,7 +133,7 @@ func processFeeds(
 	return nil
 }
 
-func processItems(configuredFeed config.Feed, items []feed.Item, duplicates DuplicateState, stdout io.Writer) error {
+func processItems(ctx context.Context, configuredFeed config.Feed, items []feed.Item, duplicates DuplicateState, relayer Relayer) error {
 	for _, item := range items {
 		if !filter.Matches(item, configuredFeed.Filters) {
 			continue
@@ -134,7 +141,7 @@ func processItems(configuredFeed config.Feed, items []feed.Item, duplicates Dupl
 		if duplicates.Seen(configuredFeed.Name, item.Identity) {
 			continue
 		}
-		if err := output.WriteItem(stdout, item); err != nil {
+		if err := relayer.Publish(ctx, item); err != nil {
 			return err
 		}
 

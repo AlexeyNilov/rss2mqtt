@@ -4,7 +4,7 @@ RSS to MQTT relay.
 
 ## MVP
 
-The first version is a small Go command-line application that reads RSS feed definitions from a local `rss.yaml` file, filters feed items by case-insensitive substrings, prints approved items to stdout, and exits. MQTT output is planned for a later phase.
+The first version is a small Go command-line application that reads RSS feed definitions from a local `rss.yaml` file, filters feed items by case-insensitive substrings, publishes approved items to MQTT, and exits.
 
 The application is intended to run on Raspberry Pi Zero 2 class hardware. Scheduling is external: the MVP runs once per invocation and can later be launched by a systemd timer.
 
@@ -23,6 +23,16 @@ Create a local `rss.yaml` file next to the binary or run the binary from a worki
 `name` must be unique per feed. Filters are matched against the RSS item title and `description`.
 
 See `rss.yaml.example` for a sample file.
+
+Create a local `.env` file for MQTT settings:
+
+```env
+MQTT_BROKER_URL=tcp://localhost:1883
+MQTT_TOPIC=rss/approved
+MQTT_CLIENT_ID=rss2mqtt
+```
+
+`MQTT_BROKER_URL` and `MQTT_TOPIC` are required. `MQTT_CLIENT_ID` is optional and defaults to `rss2mqtt`.
 
 ## Development
 

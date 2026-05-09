@@ -7,10 +7,10 @@ Step-by-step implementation plan for the MVP.
 * The MVP is one Go command-line binary named `rss2mqtt`.
 * The Go module path is `github.com/AlexeyNilov/rss2mqtt`.
 * The app reads `rss.yaml` from the current working directory.
-* The app runs once, processes all configured feeds, writes approved items to stdout, saves duplicate state, and exits.
+* The app runs once, processes all configured feeds, publishes approved items to MQTT, saves duplicate state, and exits.
 * RSS item filtering searches the item title and RSS `description`.
 * Filters are case-insensitive substrings; matching any configured substring approves the item.
-* Stdout output is human-readable and intended for manual inspection or systemd logs, not as a stable machine API.
+* MQTT output is human-readable and intended for simple downstream inspection, not as a stable machine API.
 * Duplicate suppression state is stored in `.rss2mqtt-state.json` as bounded per-feed item identity hashes.
 * `sample/feed.xml` is the canonical local RSS fixture for early parser and filtering tests.
 
@@ -156,7 +156,7 @@ Target location: either `cmd/rss2mqtt/main.go` only, or add `internal/app` if or
 * [x] Load duplicate state.
 * [x] For each configured feed, fetch and parse items.
 * [x] For each item, filter first, then check duplicate state.
-* [x] Print approved, non-duplicate items.
+* [x] Relay approved, non-duplicate items.
 * [x] Mark processed approved items in state.
 * [x] Save state at the end.
 * [x] Continue processing other feeds when one feed fetch or parse fails.
@@ -166,12 +166,12 @@ Target location: either `cmd/rss2mqtt/main.go` only, or add `internal/app` if or
 Important behavior to settle:
 
 * [x] Decide whether filtered-out items should be recorded in duplicate state. Decision: no, because changing filters later should allow older matching items to appear.
-* [x] Decide whether duplicate state is updated before or after successful stdout write. Decision: after successful write.
+* [x] Decide whether duplicate state is updated before or after successful relay. Decision: after successful relay.
 
 ## Phase 8: CLI and Runtime Polish
 
 * [x] Keep the initial CLI minimal: no flags unless a real need appears.
-* [x] Use logging for errors and operational messages; use stdout only for approved item output.
+* [x] Use logging for errors and operational messages; keep diagnostics out of the relay output.
 * [x] Send errors and diagnostics to stderr.
 * [x] Confirm the app exits after one full pass.
 
@@ -182,11 +182,10 @@ Important behavior to settle:
 * [x] Verify invalid config exits clearly.
 * [x] Verify one broken feed does not stop other feeds.
 * [x] Verify duplicate suppression across two invocations.
-* [x] Verify human-readable stdout contains approved items only.
-* [x] Verify diagnostics do not pollute stdout.
+* [x] Verify human-readable relay output contains approved items only.
+* [x] Verify diagnostics do not pollute relay output.
 * [x] Build the binary for the target platform.
 
 ## Deferred Work
 
-* [ ] MQTT output package and configuration.
-* [ ] More advanced duplicate retention policy if the simple local state grows too large.
+None at this time.

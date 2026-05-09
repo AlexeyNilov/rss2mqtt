@@ -15,7 +15,7 @@ usage() {
   printf '  TIMER_ON_CALENDAR  systemd OnCalendar value, default: %s\n' "$TIMER_ON_CALENDAR" >&2
   printf '  REMOTE_BIN_PATH     remote binary path, default: <remote-app-dir>/rss2mqtt\n' >&2
   printf '  REMOTE_CONFIG_PATH  remote config path, default: <remote-app-dir>/rss.yaml\n' >&2
-  printf '  REMOTE_ENV_PATH     optional env file path, default: <remote-app-dir>/.env\n' >&2
+  printf '  REMOTE_ENV_PATH     remote MQTT env file path, default: <remote-app-dir>/.env\n' >&2
 }
 
 while [[ $# -gt 0 ]]; do
@@ -58,7 +58,7 @@ Type=oneshot
 User=${PI_USER}
 Group=${PI_USER}
 WorkingDirectory=${REMOTE_APP_DIR}
-EnvironmentFile=-${REMOTE_ENV_PATH}
+EnvironmentFile=${REMOTE_ENV_PATH}
 ExecStart=${REMOTE_BIN_PATH}
 NoNewPrivileges=true
 PrivateTmp=true
@@ -108,6 +108,10 @@ ssh "$REMOTE_TARGET" "
   fi
   if [[ ! -f '$REMOTE_CONFIG_PATH' ]]; then
     printf 'Remote config not found: %s\n' '$REMOTE_CONFIG_PATH' >&2
+    exit 1
+  fi
+  if [[ ! -f '$REMOTE_ENV_PATH' ]]; then
+    printf 'Remote env file not found: %s\n' '$REMOTE_ENV_PATH' >&2
     exit 1
   fi
   sudo mv '$TMP_SERVICE_PATH' '$SERVICE_PATH'

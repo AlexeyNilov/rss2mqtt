@@ -33,6 +33,42 @@ Use a lightweight Architecture Decision Record (ADR) style:
 
 ## Actual decisions
 
+### 2026-05-09: Use MQTT output configured by local .env
+
+**Status:** Accepted
+
+**Context:** The production relay target is MQTT. Connection settings are local deployment details and should not live in `rss.yaml`, which describes feed behavior rather than output credentials or broker endpoints.
+
+**Decision:** Read MQTT settings from `.env` in the working directory. Require `MQTT_BROKER_URL` and `MQTT_TOPIC`, and allow optional `MQTT_CLIENT_ID`.
+
+**Alternatives considered:** Storing MQTT settings in `rss.yaml` would keep all configuration in one file, but it mixes feed rules with transport settings. Environment variables alone would work under systemd, but a local `.env` file is easier to manage consistently with the existing deployment scripts.
+
+**Consequences:** Deployments must provide both `rss.yaml` and `.env`. The existing `.env` git ignore rule remains important because broker credentials may be added later.
+
+### 2026-05-09: Use Eclipse Paho for MQTT publishing
+
+**Status:** Accepted
+
+**Context:** MQTT output requires a maintained client that handles broker connections, publish acknowledgements, and network transport details. The app should not implement MQTT protocol behavior directly.
+
+**Decision:** Use `github.com/eclipse/paho.mqtt.golang` behind `internal/mqttout`.
+
+**Alternatives considered:** Implementing MQTT directly is not reasonable for this project. Shelling out to an MQTT CLI would add operational dependencies on the Raspberry Pi. Keeping output as stdout would not satisfy the relay requirement.
+
+**Consequences:** The app gains an MQTT client dependency, isolated behind a small package. Tests use fakes and do not require a real broker.
+
+### 2026-05-09: Publish MQTT messages with QoS 1
+
+**Status:** Accepted
+
+**Context:** RSS items should not be lost silently once they pass filtering and duplicate suppression. MQTT QoS 0 would be lower overhead, but it provides no broker acknowledgement.
+
+**Decision:** Publish approved RSS items with MQTT QoS 1.
+
+**Alternatives considered:** QoS 0 is simpler and cheaper, but it is weaker than the reliability expected from a relay. QoS 2 is stronger but adds extra protocol overhead that is not justified for this lightweight Raspberry Pi deployment.
+
+**Consequences:** Publishing waits for broker acknowledgement before duplicate state is updated. A network failure may cause the same item to be retried later, which is preferable to marking an item processed before the broker has accepted it.
+
 ### 2026-05-09: Mark duplicates only after successful relay
 
 **Status:** Accepted
@@ -143,7 +179,7 @@ Use a lightweight Architecture Decision Record (ADR) style:
 
 ### 2026-05-09: Print human-readable output in the MVP
 
-**Status:** Accepted
+**Status:** Superseded by "2026-05-09: Use MQTT output configured by local .env"
 
 **Context:** The stdout stage exists to verify feed loading and filtering before MQTT support is added. The user should be able to inspect results directly in a terminal or timer logs.
 
@@ -167,7 +203,7 @@ Use a lightweight Architecture Decision Record (ADR) style:
 
 ### 2026-05-09: Start with stdout before MQTT
 
-**Status:** Accepted
+**Status:** Superseded by "2026-05-09: Use MQTT output configured by local .env"
 
 **Context:** The target behavior is to relay approved RSS items to MQTT, but the filtering and feed-processing behavior can be validated independently from MQTT connectivity.
 
