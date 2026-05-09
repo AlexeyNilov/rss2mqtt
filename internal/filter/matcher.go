@@ -14,6 +14,9 @@ func Matches(item feed.Item, filters []string) bool {
 		if normalized == "" {
 			continue
 		}
+		if normalized == "*" {
+			return true
+		}
 		if strings.Contains(text, normalized) {
 			return true
 		}

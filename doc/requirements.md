@@ -52,6 +52,7 @@ Initial YAML shape:
 ### Filtering
 
 * When an RSS item is received from a configured feed, the system shall evaluate the item against that feed's configured filter substrings.
+* When a configured feed's filter list contains `*`, the system shall approve every RSS item from that feed for relay.
 * When an RSS item's title or RSS `description` contains at least one configured filter substring, the system shall approve the item for relay.
 * When an RSS item does not match the configured filter rules, the system shall not relay the item.
 * When evaluating filter substrings, the system shall match substrings case-insensitively.

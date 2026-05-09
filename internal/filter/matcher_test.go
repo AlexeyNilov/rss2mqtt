@@ -17,6 +17,17 @@ func TestMatchesApprovesWhenAnyFilterMatches(t *testing.T) {
 	}
 }
 
+func TestMatchesApprovesEveryItemWhenWildcardFilterConfigured(t *testing.T) {
+	item := feed.Item{
+		Title:       "Gardening weekly",
+		Description: "Soil and irrigation notes",
+	}
+
+	if !Matches(item, []string{"*"}) {
+		t.Fatal("Matches() = false, want true when wildcard filter is configured")
+	}
+}
+
 func TestMatchesIsCaseInsensitive(t *testing.T) {
 	item := feed.Item{
 		Title:       "Fighting Tool Sprawl",
