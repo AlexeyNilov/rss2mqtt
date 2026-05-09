@@ -33,6 +33,18 @@ Use a lightweight Architecture Decision Record (ADR) style:
 
 ## Actual decisions
 
+### 2026-05-09: Use yaml.v3 for configuration parsing
+
+**Status:** Accepted
+
+**Context:** The application reads hand-edited YAML configuration. Correct YAML parsing includes details such as indentation, lists, scalars, and useful parse errors. Implementing even a narrow YAML parser locally would add fragile parsing logic that is not part of the project's core value.
+
+**Decision:** Use `gopkg.in/yaml.v3` for parsing `rss.yaml`.
+
+**Alternatives considered:** A custom parser for the current small config shape would avoid one dependency, but it would be brittle and would not behave like normal YAML. Switching to JSON would avoid a YAML dependency but conflicts with the accepted configuration format.
+
+**Consequences:** The project gains one small external dependency for configuration parsing. The parser behavior is conventional and easier to test, but dependency updates become part of normal maintenance.
+
 ### 2026-05-09: Use GitHub module path
 
 **Status:** Accepted

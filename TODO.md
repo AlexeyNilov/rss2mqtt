@@ -62,13 +62,13 @@ Keep `main.go` thin. Business logic belongs in `internal/*` packages so it can b
 
 Target package: `internal/config`.
 
-* [ ] Write failing tests for loading a valid `rss.yaml` with multiple feeds.
-* [ ] Write failing tests for rejecting missing feed name, missing URL, empty filters, and duplicate feed names.
-* [ ] Write failing tests for clear errors when the file is missing or YAML is invalid.
-* [ ] Implement config structs and YAML loading.
-* [ ] Implement validation with small focused functions.
-* [ ] Keep the config API independent from the current working directory; pass the file path into the loader.
-* [ ] Run `go test ./internal/config`.
+* [x] Write failing tests for loading a valid `rss.yaml` with multiple feeds.
+* [x] Write failing tests for rejecting missing feed name, missing URL, empty filters, and duplicate feed names.
+* [x] Write failing tests for clear errors when the file is missing or YAML is invalid.
+* [x] Implement config structs and YAML loading.
+* [x] Implement validation with small focused functions.
+* [x] Keep the config API independent from the current working directory; pass the file path into the loader.
+* [x] Run `go test ./internal/config`.
 
 Initial config shape:
 
