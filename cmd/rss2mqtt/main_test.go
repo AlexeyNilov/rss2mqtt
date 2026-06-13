@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"testing"
 )
 
@@ -30,5 +31,25 @@ func TestParseCLIOptionsRejectsInvalidOutput(t *testing.T) {
 	_, err := parseCLIOptions([]string{"--output", "file"})
 	if err == nil {
 		t.Fatal("parseCLIOptions() error = nil, want invalid output error")
+	}
+}
+
+func TestDiscoveryLogUsesStdoutForMQTTOutput(t *testing.T) {
+	var stdout bytes.Buffer
+
+	log := discoveryLog(cliOptions{output: outputMQTT}, &stdout)
+
+	if log != &stdout {
+		t.Fatal("discoveryLog() did not return stdout for mqtt output")
+	}
+}
+
+func TestDiscoveryLogDisabledForStdoutOutput(t *testing.T) {
+	var stdout bytes.Buffer
+
+	log := discoveryLog(cliOptions{output: outputStdout}, &stdout)
+
+	if log != nil {
+		t.Fatalf("discoveryLog() = %v, want nil for stdout output", log)
 	}
 }

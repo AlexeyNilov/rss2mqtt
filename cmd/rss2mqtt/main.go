@@ -40,9 +40,10 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 	}
 
 	return app.Run(ctx, app.Options{
-		Stdout:  stdout,
-		Stderr:  stderr,
-		Relayer: relayer,
+		Stdout:       stdout,
+		Stderr:       stderr,
+		DiscoveryLog: discoveryLog(cliOpts, stdout),
+		Relayer:      relayer,
 	})
 }
 
@@ -74,4 +75,12 @@ func buildRelayer(opts cliOptions, stdout io.Writer) (app.Relayer, error) {
 	}
 
 	return mqttout.NewPublisher(mqttConfig), nil
+}
+
+func discoveryLog(opts cliOptions, stdout io.Writer) io.Writer {
+	if opts.output == outputMQTT {
+		return stdout
+	}
+
+	return nil
 }

@@ -16,13 +16,14 @@ import (
 const DefaultConfigPath = "rss.yaml"
 
 type Options struct {
-	ConfigPath string
-	StatePath  string
-	Stdout     io.Writer
-	Stderr     io.Writer
-	Source     FeedSource
-	State      DuplicateState
-	Relayer    Relayer
+	ConfigPath   string
+	StatePath    string
+	Stdout       io.Writer
+	Stderr       io.Writer
+	DiscoveryLog io.Writer
+	Source       FeedSource
+	State        DuplicateState
+	Relayer      Relayer
 }
 
 type FeedSource interface {
@@ -56,7 +57,7 @@ func Run(ctx context.Context, opts Options) error {
 		return fmt.Errorf("load state: %w", err)
 	}
 
-	if err := processFeeds(ctx, cfg, opts.Source, duplicateState, opts.Relayer, opts.Stderr); err != nil {
+	if err := processFeeds(ctx, cfg, opts.Source, duplicateState, opts.Relayer, opts.Stderr, opts.DiscoveryLog); err != nil {
 		return err
 	}
 	if err := duplicateState.Save(); err != nil {
@@ -118,6 +119,7 @@ func processFeeds(
 	duplicates DuplicateState,
 	relayer Relayer,
 	stderr io.Writer,
+	discoveryLog io.Writer,
 ) error {
 	for _, configuredFeed := range cfg.Feeds {
 		items, err := source.Items(ctx, configuredFeed)
@@ -125,7 +127,7 @@ func processFeeds(
 			writeDiagnostic(stderr, configuredFeed.Name, err)
 			continue
 		}
-		if err := processItems(ctx, configuredFeed, items, duplicates, relayer); err != nil {
+		if err := processItems(ctx, configuredFeed, items, duplicates, relayer, discoveryLog); err != nil {
 			return err
 		}
 	}
@@ -133,7 +135,14 @@ func processFeeds(
 	return nil
 }
 
-func processItems(ctx context.Context, configuredFeed config.Feed, items []feed.Item, duplicates DuplicateState, relayer Relayer) error {
+func processItems(
+	ctx context.Context,
+	configuredFeed config.Feed,
+	items []feed.Item,
+	duplicates DuplicateState,
+	relayer Relayer,
+	discoveryLog io.Writer,
+) error {
 	for _, item := range items {
 		if !filter.Matches(item, configuredFeed.Filters) {
 			continue
@@ -142,6 +151,9 @@ func processItems(ctx context.Context, configuredFeed config.Feed, items []feed.
 			continue
 		}
 		if err := relayer.Publish(ctx, item); err != nil {
+			return err
+		}
+		if err := writeDiscoveryTitle(discoveryLog, item); err != nil {
 			return err
 		}
 
@@ -153,4 +165,15 @@ func processItems(ctx context.Context, configuredFeed config.Feed, items []feed.
 
 func writeDiagnostic(stderr io.Writer, feedName string, err error) {
 	log.New(stderr, "", 0).Printf("Feed %q failed: %v", feedName, err)
+}
+
+func writeDiscoveryTitle(writer io.Writer, item feed.Item) error {
+	if writer == nil {
+		return nil
+	}
+	if _, err := fmt.Fprintln(writer, item.Title); err != nil {
+		return fmt.Errorf("write discovery log: %w", err)
+	}
+
+	return nil
 }

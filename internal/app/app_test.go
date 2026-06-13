@@ -66,6 +66,44 @@ func TestRunPrintsApprovedNonDuplicateItemsAndSavesState(t *testing.T) {
 	}
 }
 
+func TestRunLogsNewApprovedItemTitlesWhenDiscoveryLogConfigured(t *testing.T) {
+	configPath := writeConfig(t, `
+- name: oreilly-radar
+  url: https://example.com/rss.xml
+  filters:
+    - AI
+`)
+	source := fakeSource{
+		items: map[string][]feed.Item{
+			"oreilly-radar": {
+				{FeedName: "oreilly-radar", Title: "Local AI", Identity: "item-1"},
+				{FeedName: "oreilly-radar", Title: "Gardening", Identity: "item-2"},
+				{FeedName: "oreilly-radar", Title: "AI duplicate", Identity: "item-3"},
+			},
+		},
+	}
+	state := newFakeState()
+	state.seen["oreilly-radar:item-3"] = true
+	var output bytes.Buffer
+	var discoveryLog bytes.Buffer
+
+	err := Run(context.Background(), Options{
+		ConfigPath:   configPath,
+		State:        state,
+		Source:       source,
+		Relayer:      newFakeRelayer(&output),
+		DiscoveryLog: &discoveryLog,
+		Stderr:       &bytes.Buffer{},
+	})
+	if err != nil {
+		t.Fatalf("Run() error = %v", err)
+	}
+
+	if got := discoveryLog.String(); got != "Local AI\n" {
+		t.Fatalf("discovery log = %q, want only new approved title", got)
+	}
+}
+
 func TestRunContinuesWhenOneFeedFails(t *testing.T) {
 	configPath := writeConfig(t, `
 - name: broken
@@ -173,19 +211,55 @@ func TestRunDoesNotMarkItemWhenOutputFails(t *testing.T) {
 	}
 	state := newFakeState()
 	relayer := &fakeRelayer{err: errors.New("publish failed")}
+	var discoveryLog bytes.Buffer
 
 	err := Run(context.Background(), Options{
-		ConfigPath: configPath,
-		State:      state,
-		Source:     source,
-		Relayer:    relayer,
-		Stderr:     &bytes.Buffer{},
+		ConfigPath:   configPath,
+		State:        state,
+		Source:       source,
+		Relayer:      relayer,
+		DiscoveryLog: &discoveryLog,
+		Stderr:       &bytes.Buffer{},
 	})
 	if err == nil {
 		t.Fatal("Run() error = nil, want output error")
 	}
 	if state.marked["oreilly-radar:item-1"] {
 		t.Fatal("item was marked despite output failure")
+	}
+	if discoveryLog.String() != "" {
+		t.Fatalf("discovery log = %q, want no title logged after output failure", discoveryLog.String())
+	}
+}
+
+func TestRunDoesNotMarkItemWhenDiscoveryLogFails(t *testing.T) {
+	configPath := writeConfig(t, `
+- name: oreilly-radar
+  url: https://example.com/rss.xml
+  filters:
+    - AI
+`)
+	source := fakeSource{
+		items: map[string][]feed.Item{
+			"oreilly-radar": {{FeedName: "oreilly-radar", Title: "Local AI", Identity: "item-1"}},
+		},
+	}
+	state := newFakeState()
+	var output bytes.Buffer
+
+	err := Run(context.Background(), Options{
+		ConfigPath:   configPath,
+		State:        state,
+		Source:       source,
+		Relayer:      newFakeRelayer(&output),
+		DiscoveryLog: failingWriter{err: errors.New("log failed")},
+		Stderr:       &bytes.Buffer{},
+	})
+	if err == nil {
+		t.Fatal("Run() error = nil, want discovery log error")
+	}
+	if state.marked["oreilly-radar:item-1"] {
+		t.Fatal("item was marked despite discovery log failure")
 	}
 }
 
@@ -274,6 +348,14 @@ func (r *fakeRelayer) Publish(_ context.Context, item feed.Item) error {
 	}
 	r.writer.WriteString("Title: " + item.Title + "\n")
 	return nil
+}
+
+type failingWriter struct {
+	err error
+}
+
+func (w failingWriter) Write([]byte) (int, error) {
+	return 0, w.err
 }
 
 func stateKey(feedName, identity string) string {
