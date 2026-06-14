@@ -3,11 +3,12 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-LOCAL_FILE="${LOCAL_FILE:-$ROOT_DIR/bin/rss2mqtt-linux-arm64}"
+APP_NAME="${APP_NAME:-rss2mqtt}"
+LOCAL_FILE="${LOCAL_FILE:-$ROOT_DIR/bin/${APP_NAME}-linux-arm64}"
 PI_HOST="${1:-${PI_HOST:-zero-control.local}}"
 PI_USER="${2:-${PI_USER:-pi}}"
-PI_PATH="${3:-${PI_PATH:-/home/pi/rss2mqtt/rss2mqtt}}"
-SERVICE_NAME="${4:-${SERVICE_NAME:-rss2mqtt}}"
+PI_PATH="${3:-${PI_PATH:-/home/pi/${APP_NAME}/${APP_NAME}}}"
+SERVICE_NAME="${4:-${SERVICE_NAME:-$APP_NAME}}"
 SERVICE_NAME="${SERVICE_NAME%.service}"
 SERVICE_NAME="${SERVICE_NAME%.timer}"
 TIMER_NAME="${SERVICE_NAME}.timer"
@@ -15,6 +16,7 @@ TIMER_NAME="${SERVICE_NAME}.timer"
 if [[ -z "$PI_HOST" ]]; then
   printf 'Usage: %s <pi-host> [pi-user] [remote-path] [service-name]\n' "$(basename "$0")" >&2
   printf 'Example: %s raspberrypi.local pi /home/pi/rss2mqtt/rss2mqtt rss2mqtt\n' "$(basename "$0")" >&2
+  printf 'Example: APP_NAME=githubtrending2mqtt %s raspberrypi.local pi /home/pi/githubtrending2mqtt/githubtrending2mqtt githubtrending2mqtt\n' "$(basename "$0")" >&2
   exit 1
 fi
 
