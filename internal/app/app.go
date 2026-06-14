@@ -8,6 +8,7 @@ import (
 	"log"
 
 	"github.com/AlexeyNilov/rss2mqtt/internal/config"
+	"github.com/AlexeyNilov/rss2mqtt/internal/discovery"
 	"github.com/AlexeyNilov/rss2mqtt/internal/feed"
 	"github.com/AlexeyNilov/rss2mqtt/internal/filter"
 	"github.com/AlexeyNilov/rss2mqtt/internal/state"
@@ -21,13 +22,13 @@ type Options struct {
 	Stdout       io.Writer
 	Stderr       io.Writer
 	DiscoveryLog io.Writer
-	Source       FeedSource
+	Source       Source
 	State        DuplicateState
 	Relayer      Relayer
 }
 
-type FeedSource interface {
-	Items(ctx context.Context, cfg config.Feed) ([]feed.Item, error)
+type Source interface {
+	Items(ctx context.Context, cfg discovery.Source) ([]discovery.Item, error)
 }
 
 type DuplicateState interface {
@@ -37,7 +38,7 @@ type DuplicateState interface {
 }
 
 type Relayer interface {
-	Publish(ctx context.Context, item feed.Item) error
+	Publish(ctx context.Context, item discovery.Item) error
 }
 
 type HTTPFeedSource struct {
@@ -57,17 +58,29 @@ func Run(ctx context.Context, opts Options) error {
 		return fmt.Errorf("load state: %w", err)
 	}
 
-	if err := processFeeds(ctx, cfg, opts.Source, duplicateState, opts.Relayer, opts.Stderr, opts.DiscoveryLog); err != nil {
+	if err := runSources(ctx, rssSources(cfg), opts, duplicateState); err != nil {
 		return err
 	}
-	if err := duplicateState.Save(); err != nil {
-		return fmt.Errorf("save state: %w", err)
-	}
 
-	return nil
+	return saveState(duplicateState)
 }
 
-func (s HTTPFeedSource) Items(ctx context.Context, cfg config.Feed) ([]feed.Item, error) {
+func RunSources(ctx context.Context, sources []discovery.Source, opts Options) error {
+	opts = withDefaults(opts)
+
+	duplicateState, err := duplicateState(opts)
+	if err != nil {
+		return fmt.Errorf("load state: %w", err)
+	}
+
+	if err := runSources(ctx, sources, opts, duplicateState); err != nil {
+		return err
+	}
+
+	return saveState(duplicateState)
+}
+
+func (s HTTPFeedSource) Items(ctx context.Context, cfg discovery.Source) ([]discovery.Item, error) {
 	client := s.Client
 	if client == nil {
 		client = feed.DefaultHTTPClient()
@@ -112,22 +125,31 @@ func duplicateState(opts Options) (DuplicateState, error) {
 	return state.Load(opts.StatePath)
 }
 
-func processFeeds(
+func runSources(
 	ctx context.Context,
-	cfg config.Config,
-	source FeedSource,
+	sources []discovery.Source,
+	opts Options,
+	duplicates DuplicateState,
+) error {
+	return processSources(ctx, sources, opts.Source, duplicates, opts.Relayer, opts.Stderr, opts.DiscoveryLog)
+}
+
+func processSources(
+	ctx context.Context,
+	sources []discovery.Source,
+	source Source,
 	duplicates DuplicateState,
 	relayer Relayer,
 	stderr io.Writer,
 	discoveryLog io.Writer,
 ) error {
-	for _, configuredFeed := range cfg.Feeds {
-		items, err := source.Items(ctx, configuredFeed)
+	for _, configuredSource := range sources {
+		items, err := source.Items(ctx, configuredSource)
 		if err != nil {
-			writeDiagnostic(stderr, configuredFeed.Name, err)
+			writeDiagnostic(stderr, configuredSource.Name, err)
 			continue
 		}
-		if err := processItems(ctx, configuredFeed, items, duplicates, relayer, discoveryLog); err != nil {
+		if err := processItems(ctx, configuredSource, items, duplicates, relayer, discoveryLog); err != nil {
 			return err
 		}
 	}
@@ -137,8 +159,8 @@ func processFeeds(
 
 func processItems(
 	ctx context.Context,
-	configuredFeed config.Feed,
-	items []feed.Item,
+	configuredFeed discovery.Source,
+	items []discovery.Item,
 	duplicates DuplicateState,
 	relayer Relayer,
 	discoveryLog io.Writer,
@@ -163,11 +185,32 @@ func processItems(
 	return nil
 }
 
+func rssSources(cfg config.Config) []discovery.Source {
+	sources := make([]discovery.Source, 0, len(cfg.Feeds))
+	for _, feed := range cfg.Feeds {
+		sources = append(sources, discovery.Source{
+			Name:    feed.Name,
+			URL:     feed.URL,
+			Filters: feed.Filters,
+		})
+	}
+
+	return sources
+}
+
+func saveState(state DuplicateState) error {
+	if err := state.Save(); err != nil {
+		return fmt.Errorf("save state: %w", err)
+	}
+
+	return nil
+}
+
 func writeDiagnostic(stderr io.Writer, feedName string, err error) {
 	log.New(stderr, "", 0).Printf("Feed %q failed: %v", feedName, err)
 }
 
-func writeDiscoveryTitle(writer io.Writer, item feed.Item) error {
+func writeDiscoveryTitle(writer io.Writer, item discovery.Item) error {
 	if writer == nil {
 		return nil
 	}

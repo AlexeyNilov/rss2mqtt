@@ -3,10 +3,10 @@ package filter
 import (
 	"strings"
 
-	"github.com/AlexeyNilov/rss2mqtt/internal/feed"
+	"github.com/AlexeyNilov/rss2mqtt/internal/discovery"
 )
 
-func Matches(item feed.Item, filters []string) bool {
+func Matches(item discovery.Item, filters []string) bool {
 	text := strings.ToLower(item.Title + "\n" + item.Description)
 
 	for _, filter := range filters {

@@ -9,8 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexeyNilov/rss2mqtt/internal/config"
-	"github.com/AlexeyNilov/rss2mqtt/internal/feed"
+	"github.com/AlexeyNilov/rss2mqtt/internal/discovery"
 )
 
 func TestRunPrintsApprovedNonDuplicateItemsAndSavesState(t *testing.T) {
@@ -21,11 +20,11 @@ func TestRunPrintsApprovedNonDuplicateItemsAndSavesState(t *testing.T) {
     - AI
 `)
 	source := fakeSource{
-		items: map[string][]feed.Item{
+		items: map[string][]discovery.Item{
 			"oreilly-radar": {
-				{FeedName: "oreilly-radar", Title: "Local AI", Identity: "item-1"},
-				{FeedName: "oreilly-radar", Title: "Gardening", Identity: "item-2"},
-				{FeedName: "oreilly-radar", Title: "AI duplicate", Identity: "item-3"},
+				{SourceName: "oreilly-radar", Title: "Local AI", Identity: "item-1"},
+				{SourceName: "oreilly-radar", Title: "Gardening", Identity: "item-2"},
+				{SourceName: "oreilly-radar", Title: "AI duplicate", Identity: "item-3"},
 			},
 		},
 	}
@@ -74,11 +73,11 @@ func TestRunLogsNewApprovedItemTitlesWhenDiscoveryLogConfigured(t *testing.T) {
     - AI
 `)
 	source := fakeSource{
-		items: map[string][]feed.Item{
+		items: map[string][]discovery.Item{
 			"oreilly-radar": {
-				{FeedName: "oreilly-radar", Title: "Local AI", Identity: "item-1"},
-				{FeedName: "oreilly-radar", Title: "Gardening", Identity: "item-2"},
-				{FeedName: "oreilly-radar", Title: "AI duplicate", Identity: "item-3"},
+				{SourceName: "oreilly-radar", Title: "Local AI", Identity: "item-1"},
+				{SourceName: "oreilly-radar", Title: "Gardening", Identity: "item-2"},
+				{SourceName: "oreilly-radar", Title: "AI duplicate", Identity: "item-3"},
 			},
 		},
 	}
@@ -116,8 +115,8 @@ func TestRunContinuesWhenOneFeedFails(t *testing.T) {
     - Go
 `)
 	source := fakeSource{
-		items: map[string][]feed.Item{
-			"working": {{FeedName: "working", Title: "Go release", Identity: "go-1"}},
+		items: map[string][]discovery.Item{
+			"working": {{SourceName: "working", Title: "Go release", Identity: "go-1"}},
 		},
 		errs: map[string]error{
 			"broken": errors.New("network failed"),
@@ -205,8 +204,8 @@ func TestRunDoesNotMarkItemWhenOutputFails(t *testing.T) {
     - AI
 `)
 	source := fakeSource{
-		items: map[string][]feed.Item{
-			"oreilly-radar": {{FeedName: "oreilly-radar", Title: "Local AI", Identity: "item-1"}},
+		items: map[string][]discovery.Item{
+			"oreilly-radar": {{SourceName: "oreilly-radar", Title: "Local AI", Identity: "item-1"}},
 		},
 	}
 	state := newFakeState()
@@ -240,8 +239,8 @@ func TestRunDoesNotMarkItemWhenDiscoveryLogFails(t *testing.T) {
     - AI
 `)
 	source := fakeSource{
-		items: map[string][]feed.Item{
-			"oreilly-radar": {{FeedName: "oreilly-radar", Title: "Local AI", Identity: "item-1"}},
+		items: map[string][]discovery.Item{
+			"oreilly-radar": {{SourceName: "oreilly-radar", Title: "Local AI", Identity: "item-1"}},
 		},
 	}
 	state := newFakeState()
@@ -271,8 +270,8 @@ func TestRunReturnsErrorWhenStateSaveFails(t *testing.T) {
     - AI
 `)
 	source := fakeSource{
-		items: map[string][]feed.Item{
-			"oreilly-radar": {{FeedName: "oreilly-radar", Title: "Local AI", Identity: "item-1"}},
+		items: map[string][]discovery.Item{
+			"oreilly-radar": {{SourceName: "oreilly-radar", Title: "Local AI", Identity: "item-1"}},
 		},
 	}
 	state := newFakeState()
@@ -295,11 +294,11 @@ func TestRunReturnsErrorWhenStateSaveFails(t *testing.T) {
 }
 
 type fakeSource struct {
-	items map[string][]feed.Item
+	items map[string][]discovery.Item
 	errs  map[string]error
 }
 
-func (s fakeSource) Items(_ context.Context, cfg config.Feed) ([]feed.Item, error) {
+func (s fakeSource) Items(_ context.Context, cfg discovery.Source) ([]discovery.Item, error) {
 	if err := s.errs[cfg.Name]; err != nil {
 		return nil, err
 	}
@@ -342,7 +341,7 @@ func newFakeRelayer(writer *bytes.Buffer) *fakeRelayer {
 	return &fakeRelayer{writer: writer}
 }
 
-func (r *fakeRelayer) Publish(_ context.Context, item feed.Item) error {
+func (r *fakeRelayer) Publish(_ context.Context, item discovery.Item) error {
 	if r.err != nil {
 		return r.err
 	}

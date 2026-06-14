@@ -11,11 +11,11 @@ The tools are designed for Raspberry Pi Zero 2 class hardware. Each command runs
 once and exits, so scheduling is handled outside the process, typically by a
 systemd timer.
 
-Planned tools:
+Tools:
 
 * `rss2mqtt`: discover matching RSS feed items.
-* `githubtrending2mqtt`: discover new repositories from GitHub Trending pages
-  and publish them through the same MQTT/state pipeline.
+* `githubtrending2mqtt`: discover repositories from GitHub Trending pages and
+  publish them through the same MQTT/state pipeline.
 
 ## Shared Design
 
@@ -83,6 +83,44 @@ rss2mqtt --output stdout
 
 Supported output values are `mqtt` and `stdout`.
 
+## githubtrending2mqtt Configuration
+
+Run the binary from a directory containing `github-trending.yaml`.
+
+```yaml
+- name: python-weekly
+  language: python
+  since: weekly
+  filters:
+    - "*"
+
+- name: go-monthly
+  language: go
+  since: monthly
+  filters:
+    - mqtt
+    - cli
+```
+
+`name` must be unique per page. `language` is optional; omit it to read the
+global Trending page. `since` is optional and defaults to `weekly`; supported
+values are `daily`, `weekly`, and `monthly`.
+
+You can also provide an explicit GitHub Trending URL:
+
+```yaml
+- name: python-weekly
+  url: https://github.com/trending/python?since=weekly
+  filters:
+    - "*"
+```
+
+Filters are matched against the repository title and description. Use `"*"` to
+approve every discovered repository from a configured page.
+
+For MQTT output, `githubtrending2mqtt` uses the same `.env` format as
+`rss2mqtt`.
+
 ## Development
 
 Run tests:
@@ -95,6 +133,7 @@ Build locally:
 
 ```
 go build ./cmd/rss2mqtt
+go build ./cmd/githubtrending2mqtt
 ```
 
 Build `rss2mqtt` for Raspberry Pi Zero 2:
@@ -103,7 +142,7 @@ Build `rss2mqtt` for Raspberry Pi Zero 2:
 scripts/build_arm.sh
 ```
 
-Build another command after it exists:
+Build `githubtrending2mqtt`:
 
 ```bash
 scripts/build_arm.sh githubtrending2mqtt
@@ -117,7 +156,7 @@ Copy a new binary to the Pi:
 scripts/deploy_pi.sh raspberrypi.local pi /home/pi/rss2mqtt/rss2mqtt rss2mqtt
 ```
 
-Copy another command after it exists:
+Copy `githubtrending2mqtt` to the Pi:
 
 ```bash
 APP_NAME=githubtrending2mqtt scripts/deploy_pi.sh raspberrypi.local pi /home/pi/githubtrending2mqtt/githubtrending2mqtt githubtrending2mqtt
@@ -129,7 +168,7 @@ Install the systemd service and timer:
 scripts/setup_service_pi.sh raspberrypi.local pi /home/pi/rss2mqtt rss2mqtt
 ```
 
-Install the planned GitHub Trending service and timer:
+Install the GitHub Trending service and timer:
 
 ```bash
 scripts/setup_githubtrending_service_pi.sh raspberrypi.local pi /home/pi/githubtrending2mqtt
@@ -163,3 +202,5 @@ These files are intentionally local and ignored by git:
 * `.env`
 * `rss.yaml`
 * `.rss2mqtt-state.json`
+* `github-trending.yaml`
+* `.githubtrending2mqtt-state.json`

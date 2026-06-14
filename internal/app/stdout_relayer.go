@@ -4,7 +4,7 @@ import (
 	"context"
 	"io"
 
-	"github.com/AlexeyNilov/rss2mqtt/internal/feed"
+	"github.com/AlexeyNilov/rss2mqtt/internal/discovery"
 	"github.com/AlexeyNilov/rss2mqtt/internal/output"
 )
 
@@ -16,7 +16,7 @@ func NewStdoutRelayer(writer io.Writer) Relayer {
 	return stdoutRelayer{writer: writer}
 }
 
-func (r stdoutRelayer) Publish(ctx context.Context, item feed.Item) error {
+func (r stdoutRelayer) Publish(ctx context.Context, item discovery.Item) error {
 	if err := ctx.Err(); err != nil {
 		return err
 	}

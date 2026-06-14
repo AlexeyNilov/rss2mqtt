@@ -1,0 +1,12 @@
+- name: python-weekly
+  language: python
+  since: weekly
+  filters:
+    - "*"
+
+- name: go-monthly
+  language: go
+  since: monthly
+  filters:
+    - mqtt
+    - cli

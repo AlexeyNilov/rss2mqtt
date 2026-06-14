@@ -3,11 +3,11 @@ package filter
 import (
 	"testing"
 
-	"github.com/AlexeyNilov/rss2mqtt/internal/feed"
+	"github.com/AlexeyNilov/rss2mqtt/internal/discovery"
 )
 
 func TestMatchesApprovesWhenAnyFilterMatches(t *testing.T) {
-	item := feed.Item{
+	item := discovery.Item{
 		Title:       "Weekly Go release notes",
 		Description: "Compiler and runtime changes",
 	}
@@ -18,7 +18,7 @@ func TestMatchesApprovesWhenAnyFilterMatches(t *testing.T) {
 }
 
 func TestMatchesApprovesEveryItemWhenWildcardFilterConfigured(t *testing.T) {
-	item := feed.Item{
+	item := discovery.Item{
 		Title:       "Gardening weekly",
 		Description: "Soil and irrigation notes",
 	}
@@ -29,7 +29,7 @@ func TestMatchesApprovesEveryItemWhenWildcardFilterConfigured(t *testing.T) {
 }
 
 func TestMatchesIsCaseInsensitive(t *testing.T) {
-	item := feed.Item{
+	item := discovery.Item{
 		Title:       "Fighting Tool Sprawl",
 		Description: "Enterprise AI agent adoption scales",
 	}
@@ -42,15 +42,15 @@ func TestMatchesIsCaseInsensitive(t *testing.T) {
 func TestMatchesSearchesTitleAndDescription(t *testing.T) {
 	tests := []struct {
 		name string
-		item feed.Item
+		item discovery.Item
 	}{
 		{
 			name: "title",
-			item: feed.Item{Title: "Local AI", Description: "offline models"},
+			item: discovery.Item{Title: "Local AI", Description: "offline models"},
 		},
 		{
 			name: "description",
-			item: feed.Item{Title: "Local compute", Description: "AI models on device"},
+			item: discovery.Item{Title: "Local compute", Description: "AI models on device"},
 		},
 	}
 
@@ -64,7 +64,7 @@ func TestMatchesSearchesTitleAndDescription(t *testing.T) {
 }
 
 func TestMatchesRejectsWhenNoFilterMatches(t *testing.T) {
-	item := feed.Item{
+	item := discovery.Item{
 		Title:       "Gardening weekly",
 		Description: "Soil and irrigation notes",
 	}
@@ -75,7 +75,7 @@ func TestMatchesRejectsWhenNoFilterMatches(t *testing.T) {
 }
 
 func TestMatchesRejectsEmptyFilters(t *testing.T) {
-	item := feed.Item{
+	item := discovery.Item{
 		Title:       "Local AI",
 		Description: "AI models on device",
 	}
@@ -86,7 +86,7 @@ func TestMatchesRejectsEmptyFilters(t *testing.T) {
 }
 
 func TestMatchesIgnoresBlankFilters(t *testing.T) {
-	item := feed.Item{
+	item := discovery.Item{
 		Title:       "Local AI",
 		Description: "AI models on device",
 	}

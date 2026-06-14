@@ -31,8 +31,12 @@ go.work.sum
 # Local runtime files
 rss.yaml
 .rss2mqtt-state.*
+github-trending.yaml
+.githubtrending2mqtt-state.*
 /rss2mqtt
 /rss2mqtt.exe
+/githubtrending2mqtt
+/githubtrending2mqtt.exe
 
 # cache and mod files
 .gocache/

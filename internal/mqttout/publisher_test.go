@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexeyNilov/rss2mqtt/internal/feed"
+	"github.com/AlexeyNilov/rss2mqtt/internal/discovery"
 )
 
 func TestPublisherPublishesFormattedItem(t *testing.T) {
@@ -19,10 +19,10 @@ func TestPublisherPublishesFormattedItem(t *testing.T) {
 		Timeout:   time.Second,
 	}, client)
 
-	err := publisher.Publish(context.Background(), feed.Item{
-		FeedName: "sample",
-		Title:    "Fighting Tool Sprawl",
-		Link:     "https://example.com/article",
+	err := publisher.Publish(context.Background(), discovery.Item{
+		SourceName: "sample",
+		Title:      "Fighting Tool Sprawl",
+		Link:       "https://example.com/article",
 	})
 	if err != nil {
 		t.Fatalf("Publish() error = %v", err)
@@ -49,7 +49,7 @@ func TestPublisherReturnsConnectError(t *testing.T) {
 	client := &fakeClient{connectErr: errors.New("connect failed")}
 	publisher := NewPublisherWithClient(Config{Topic: "rss/approved", Timeout: time.Second}, client)
 
-	err := publisher.Publish(context.Background(), feed.Item{Title: "item"})
+	err := publisher.Publish(context.Background(), discovery.Item{Title: "item"})
 	if err == nil {
 		t.Fatal("Publish() error = nil, want connect error")
 	}
@@ -62,7 +62,7 @@ func TestPublisherReturnsPublishError(t *testing.T) {
 	client := &fakeClient{publishErr: errors.New("publish failed")}
 	publisher := NewPublisherWithClient(Config{Topic: "rss/approved", Timeout: time.Second}, client)
 
-	err := publisher.Publish(context.Background(), feed.Item{Title: "item"})
+	err := publisher.Publish(context.Background(), discovery.Item{Title: "item"})
 	if err == nil {
 		t.Fatal("Publish() error = nil, want publish error")
 	}
@@ -75,7 +75,7 @@ func TestPublisherReturnsTimeout(t *testing.T) {
 	client := &fakeClient{connectTimeout: true}
 	publisher := NewPublisherWithClient(Config{Topic: "rss/approved", Timeout: time.Second}, client)
 
-	err := publisher.Publish(context.Background(), feed.Item{Title: "item"})
+	err := publisher.Publish(context.Background(), discovery.Item{Title: "item"})
 	if err == nil {
 		t.Fatal("Publish() error = nil, want timeout")
 	}

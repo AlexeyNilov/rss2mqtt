@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/AlexeyNilov/rss2mqtt/internal/feed"
+	"github.com/AlexeyNilov/rss2mqtt/internal/discovery"
 	"github.com/AlexeyNilov/rss2mqtt/internal/output"
 	paho "github.com/eclipse/paho.mqtt.golang"
 )
@@ -41,7 +41,7 @@ func NewPublisherWithClient(cfg Config, client mqttClient) *Publisher {
 	return &Publisher{cfg: cfg, client: client}
 }
 
-func (p *Publisher) Publish(ctx context.Context, item feed.Item) error {
+func (p *Publisher) Publish(ctx context.Context, item discovery.Item) error {
 	if err := ctx.Err(); err != nil {
 		return err
 	}
@@ -98,7 +98,7 @@ func waitToken(action string, token token, timeout time.Duration) error {
 	return nil
 }
 
-func formatPayload(item feed.Item) ([]byte, error) {
+func formatPayload(item discovery.Item) ([]byte, error) {
 	var buf bytes.Buffer
 	if err := output.WriteItem(&buf, item); err != nil {
 		return nil, err

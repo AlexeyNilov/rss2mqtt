@@ -5,13 +5,13 @@ import (
 	"io"
 	"strings"
 
-	"github.com/AlexeyNilov/rss2mqtt/internal/feed"
+	"github.com/AlexeyNilov/rss2mqtt/internal/discovery"
 )
 
 const descriptionLimit = 160
 
-func WriteItem(writer io.Writer, item feed.Item) error {
-	if _, err := fmt.Fprintf(writer, "Feed: %s\n", item.FeedName); err != nil {
+func WriteItem(writer io.Writer, item discovery.Item) error {
+	if _, err := fmt.Fprintf(writer, "Source: %s\n", item.SourceName); err != nil {
 		return fmt.Errorf("write feed item: %w", err)
 	}
 	if _, err := fmt.Fprintf(writer, "Title: %s\n", item.Title); err != nil {

@@ -7,13 +7,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexeyNilov/rss2mqtt/internal/feed"
+	"github.com/AlexeyNilov/rss2mqtt/internal/discovery"
 )
 
 func TestWriteItemFormatsApprovedItem(t *testing.T) {
 	var buf bytes.Buffer
-	item := feed.Item{
-		FeedName:    "oreilly-radar",
+	item := discovery.Item{
+		SourceName:  "oreilly-radar",
 		Title:       "Fighting Tool Sprawl",
 		Link:        "https://example.com/article",
 		Description: "As enterprise AI agent adoption scales, tool infrastructure matters.",
@@ -26,7 +26,7 @@ func TestWriteItemFormatsApprovedItem(t *testing.T) {
 
 	got := buf.String()
 	for _, want := range []string{
-		"Feed: oreilly-radar",
+		"Source: oreilly-radar",
 		"Title: Fighting Tool Sprawl",
 		"Link: https://example.com/article",
 		"Published: 2026-05-08T11:20:31Z",
@@ -40,9 +40,9 @@ func TestWriteItemFormatsApprovedItem(t *testing.T) {
 
 func TestWriteItemOmitsEmptyOptionalFields(t *testing.T) {
 	var buf bytes.Buffer
-	item := feed.Item{
-		FeedName: "oreilly-radar",
-		Title:    "Local AI",
+	item := discovery.Item{
+		SourceName: "oreilly-radar",
+		Title:      "Local AI",
 	}
 
 	if err := WriteItem(&buf, item); err != nil {
@@ -63,8 +63,8 @@ func TestWriteItemOmitsEmptyOptionalFields(t *testing.T) {
 
 func TestWriteItemTruncatesLongDescription(t *testing.T) {
 	var buf bytes.Buffer
-	item := feed.Item{
-		FeedName:    "oreilly-radar",
+	item := discovery.Item{
+		SourceName:  "oreilly-radar",
 		Title:       "Long article",
 		Description: strings.Repeat("a", 260),
 	}
@@ -85,7 +85,7 @@ func TestWriteItemTruncatesLongDescription(t *testing.T) {
 func TestWriteItemPropagatesWriterError(t *testing.T) {
 	errWriter := failingWriter{err: errors.New("write failed")}
 
-	err := WriteItem(errWriter, feed.Item{FeedName: "feed", Title: "title"})
+	err := WriteItem(errWriter, discovery.Item{SourceName: "feed", Title: "title"})
 	if err == nil {
 		t.Fatal("WriteItem() error = nil, want writer error")
 	}

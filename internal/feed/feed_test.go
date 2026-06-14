@@ -25,8 +25,8 @@ func TestParseReadsSampleFeedItems(t *testing.T) {
 	}
 
 	first := items[0]
-	if first.FeedName != "oreilly-radar" {
-		t.Fatalf("FeedName = %q, want %q", first.FeedName, "oreilly-radar")
+	if first.SourceName != "oreilly-radar" {
+		t.Fatalf("SourceName = %q, want %q", first.SourceName, "oreilly-radar")
 	}
 	if first.Title != "Fighting Tool Sprawl: The Case for AI Tool Registries" {
 		t.Fatalf("Title = %q", first.Title)

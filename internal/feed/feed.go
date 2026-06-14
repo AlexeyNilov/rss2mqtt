@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/AlexeyNilov/rss2mqtt/internal/discovery"
 	"github.com/mmcdole/gofeed"
 )
 
@@ -16,15 +17,7 @@ type HTTPDoer interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
-type Item struct {
-	FeedName    string
-	Title       string
-	Description string
-	Link        string
-	GUID        string
-	Identity    string
-	Published   time.Time
-}
+type Item = discovery.Item
 
 func DefaultHTTPClient() *http.Client {
 	return &http.Client{Timeout: defaultHTTPTimeout}
@@ -70,7 +63,7 @@ func Parse(reader io.Reader, feedName string) ([]Item, error) {
 
 func normalizeItem(feedName string, item *gofeed.Item) Item {
 	normalized := Item{
-		FeedName:    feedName,
+		SourceName:  feedName,
 		Title:       item.Title,
 		Description: item.Description,
 		Link:        item.Link,
